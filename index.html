@@ -353,7 +353,7 @@
     <div class="nfc-scan-container">
         <div class="nfc-animation"></div>
         <p>请将设备贴近 NFC 感应区</p>
-        <button onclick="simulateNFCScan('04:A1:B2:C3')" style="margin-top:20px; opacity:0.5;">模拟读取正确UID</button>
+        <button onclick="simulateNFCScan('46:48:23:58:01:01:ae:e0')" style="margin-top:20px; opacity:0.5;">模拟读取正确UID</button>
     </div>
 </div>
 
@@ -436,7 +436,7 @@
         } catch (e) { nfcRunning = false; }
     }
     // 模拟特定的 UID 识别
-const TARGET_UID = "04:A1:B2:C3";
+const TARGET_UID = "46:48:23:58:01:01:ae:e0";
 
 function simulateNFCScan(uid) {
     if (uid === TARGET_UID) {
