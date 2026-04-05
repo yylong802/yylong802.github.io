@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>全功能票据感应用原型 - 极窄光环版</title>
+    <title>全功能票据感应用原型 - 终极整合版</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         /* ================= 1. 全局与颜色变量 ================= */
@@ -46,30 +46,22 @@
         .nav-b-icon img { width: 28px; height: 28px;  } 
 
         /* ================= 3. Page A 样式 ================= */
-        .page-a-content { flex: 1; 
-        overflow-y: auto; 
-        min-height: 0;
-        padding-top: 15px; 
-
-        /* === MODIFIED/ADDED PART === */
-        /* 1. 设置一个保底的背景色，防止图片加载慢时留白 */
-        background-color: white; 
-        
-        /* 2. 指向你的背景图片路径 */
-        background-image: url('./Abk.png'); /* !!! 将这里替换为你实际的图片路径 !!! */
-        
-        /* 3. 核心设置：让图片全铺满且不变形 */
-        background-size: cover;      /* 保持比例缩放，完全覆盖容器（可能会裁切两边） */
-        background-position: center; /* 图片居中显示 */
-        background-repeat: no-repeat;/* 不平铺（不重复） */}
+        .page-a-content { 
+            flex: 1; 
+            overflow-y: auto; 
+            min-height: 0;
+            padding-top: 15px; 
+            background-color: white; 
+            background-image: url('./Abk.png'); /* 你的A页面背景图 */
+            background-size: cover;      
+            background-position: center; 
+            background-repeat: no-repeat;
+        }
         .carousel-wrapper { width: 94%; margin: 0 auto; position: relative; }
         .banner { height: 150px; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; border-radius: 12px; }
         .banner::-webkit-scrollbar { display: none; }
         .banner-item { min-width: 100%; height: 100%; scroll-snap-align: center; }
         .banner-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        
-        
-        .progress-fill { width: 33.33%; height: 100%; background: var(--primary-blue); transition: margin-left 0.3s ease; }
 
         .notice-bar { width: 94%; height: 90px; margin: 15px auto; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         .notice-bar img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -96,7 +88,7 @@
         }
 
         .sub-nav { display: flex; justify-content: space-around; padding: 15px 10px; flex-shrink: 0; }
-        .sub-nav-item { padding: 6px 20px; border-radius: 20px; border: 1px solid var(#0135a3); font-size: 14px; color: var(--primary-blue); font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .sub-nav-item { padding: 6px 20px; border-radius: 20px; border: 1px solid #0135a3; font-size: 14px; color: var(--primary-blue); font-weight: bold; cursor: pointer; transition: 0.2s; }
         .sub-nav-item.active { background: var(--primary-blue); color: white; }
 
         .sub-page { 
@@ -111,51 +103,29 @@
         .notch-left { left: 0; border-radius: 0 28px 28px 0; }
         .notch-right { right: 0; border-radius: 28px 0 0 28px; }
 
-        /* ================= 5. B1 三重环形 (外环极窄版) ================= */
+        /* ================= 5. B1 / B2 / B3 内部组件样式 ================= */
         .ring-container { display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 15px 0; flex-shrink: 0;}
-        /* 再缩小50%：130px -> 110px */
         .ring-outer { width: 120px; height: 120px; border-radius: 50%; background: var(--light-blue); display: flex; align-items: center; justify-content: center; }
-        /* 再缩小50%：110px -> 100px */
         .ring-mid { width: 105px; height: 105px; border-radius: 50%; background: var(--mid-blue); display: flex; align-items: center; justify-content: center; }
-        /* 核心 90px 保持不变 */
         .ring-inner { width: 90px; height: 90px; border-radius: 50%; background: #1450d2; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 15px rgba(0,123,255,0.4); }
         .ring-inner img { width: 50px; height: 65px;  }
         .scan-text { margin-top: 15px; font-weight: bold; color: var(--primary-blue); font-size: 15px; }
 
-        /* ================= B2 全新表单布局 ================= */
-        .b2-input-wrapper {
-            display: flex; flex-direction: column; align-items: center;
-            width: 100%; margin: 15px 0; flex-shrink: 0;
-        }
+        .b2-input-wrapper { display: flex; flex-direction: column; align-items: center; width: 100%; margin: 15px 0; flex-shrink: 0; }
         .b2-input-wrapper input[type=number]::-webkit-inner-spin-button, 
-        .b2-input-wrapper input[type=number]::-webkit-outer-spin-button { 
-            -webkit-appearance: none; margin: 0; 
-        }
+        .b2-input-wrapper input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         .b2-input-wrapper input[type=number] { -moz-appearance: textfield; }
-        
-        .b2-full-input {
-            width: 100%; padding: 14px 15px; border: 1px solid #ddd;
-            border-radius: 8px; background: #fafafa; outline: none; font-size: 15px;
-        }
+        .b2-full-input { width: 100%; padding: 14px 15px; border: 1px solid #ddd; border-radius: 8px; background: #fafafa; outline: none; font-size: 15px; }
         .b2-full-input::placeholder { color: #bbbbbb; }
+        .b2-oval-btn { width: 85%; margin-top: 20px; padding: 14px; background: var(--primary-blue); color: white; border: none; border-radius: 30px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 12px rgba(0,123,255,0.2); cursor: pointer; }
 
-        .b2-oval-btn {
-            width: 85%; margin-top: 20px; padding: 14px;
-            background: var(--primary-blue); color: white;
-            border: none; border-radius: 30px; 
-            font-weight: bold; font-size: 16px;
-            box-shadow: 0 4px 12px rgba(0,123,255,0.2);
-            cursor: pointer;
-        }
-
-        /* B3 NFC 样式 */
         .nfc-gif-box { margin-top: 30px; display: flex; flex-direction: column; align-items: center; flex-shrink: 0;}
         .nfc-gif-box img { width: 140px; height: 140px; border-radius: 50%; object-fit: cover; box-shadow: 0 4px 20px rgba(0,123,255,0.2); }
 
         #qr-reader-container { position: absolute; top:0; left:0; width: 100%; height: 100%; background: black; z-index: 200; display: none; flex-direction: column; }
         .close-qr { color: white; text-align: center; padding: 20px; background: #333; cursor: pointer; flex-shrink: 0;}
 
-        /* ================= 6. Page C ================= */
+        /* ================= 6. Page C 完整样式 ================= */
         .page-c-content { background: white; flex: 1; display: flex; flex-direction: column; min-height: 0; overflow-y: auto;}
         .profile-header { display: flex; align-items: center; padding: 30px 20px; border-bottom: 1px solid #eee; flex-shrink: 0;}
         .avatar { width: 65px; height: 65px; border-radius: 50%; background: var(--primary-blue); color: white; display: flex; justify-content: center; align-items: center; font-size: 28px; margin-right: 15px; }
@@ -163,72 +133,143 @@
         .c-menu-item { padding: 16px 20px; border-bottom: 1px solid #eee; font-size: 15px; color: #333; flex-shrink: 0;}
         .logout-btn { display: block; width: 85%; margin: auto auto 30px auto; padding: 15px; background: var(--primary-blue); color: white; border: none; border-radius: 30px; text-align: center; font-size: 16px; font-weight: bold; flex-shrink: 0;}
 
-        /* 验证结果页全屏容器 */
-        .full-page-result {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
-            z-index: 1000;
-            /* 背景图设置 */
-            background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1000&auto=format&fit=crop'); 
-            background-size: cover;
-            background-position: center;
-            display: flex;
-            flex-direction: column;
-        }
+       /* ================= 7. 独立全屏验证结果页 (PageB3) ================= */
+#pageB3-result {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100dvh;
+    z-index: 2000;
+    
+    /* 👇 删掉原本的 transparent，加上下面这 4 行 👇 */
+    background-image: url('./r2-1.jpg'); /* <--- 在这里填入你的图片名字 */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    /* 👆 修改结束 👆 */
 
-        .result-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between; /* 撑开上下两部分 */
-            padding: 40px 20px;
-            background: rgba(0, 0, 0, 0.2); /* 给背景图加一层淡淡的遮罩，保证文字清晰 */
-        }
+    display: none;
+}
 
-        /* 信息展示区 */
-        .info-section {
-            color: white;
-            line-height: 2.2;
-            font-size: 16px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-        }
+.result-overlay {
+    width: 100%; height: 100%;
+    /* 这里的遮罩也是全透明，如果想让底下稍微变暗一点，可以改成 rgba(0,0,0,0.3) */
+    background: transparent; 
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end; /* 让卡片靠下 */
+    padding-bottom: 12vh;      /* 距离底部的距离：数字越大越靠上，越小越靠下 */
+    position: relative;
+}
 
-        /* 缩进处理：1个空格约等于 0.5em，2个空格约 1em */
+.back-btn {
+    position: absolute;
+    top: 20px; left: 20px;
+    color: #333; /* 因为背景透明了，返回按钮字改成深色防止看不清 */
+    font-size: 15px; font-weight: bold;
+    padding: 8px 15px;
+    background: rgba(255,255,255,0.8);
+    border-radius: 20px;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    z-index: 10;
+}
+
+/* ---------------- I1：白色卡片样式 ---------------- */
+.result-card-i1 {
+    background-color: white; /* I1 的白色背景 */
+    width: 90%;
+    margin: 0 auto 20px auto; /* 距离底部跳转按钮 20px */
+    border-radius: 12px;
+    padding: 20px;
+    position: relative; /* 核心：让印章可以在它内部绝对定位 */
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    z-index: 10;
+}
+
+/* ---- 印章样式（精准居中） ---- */
+.center-stamp {
+    position: absolute;
+    top: 50%;   /* 垂直居中 */
+    left: 50%;  /* 水平居中 */
+    transform: translate(-50%, -50%) rotate(-10deg); /* 完美居中并微微左倾斜 */
+    width: 110px;        /* 调整印章的大小 */
+    opacity: 0.85;       /* 调整透明度：让底下的字透过来一点 */
+    pointer-events: none;/* 核心：点击穿透，鼠标不会误触到图片 */
+    z-index: 5;          /* 层级介于 I1底色 和 I2表格 之间 */
+}
+
+.table-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 15px;
+    position: relative;
+    z-index: 10;
+}
+
+/* ---------------- I2：内部表格样式 ---------------- */
+.table-container-i2 {
+    background-color: #fff9f9; /* I2 的浅粉白背景 */
+    border-radius: 8px;
+    padding: 5px 15px;
+    position: relative;
+    z-index: 10; /* 确保文字在印章之上，如果想让印章盖在文字上，把这里改成 1 */
+}
+
+/* 表格的浅灰色分割线 */
+.i2-row {
+    display: flex;
+    padding: 12px 0;
+    border-bottom: 1px solid #eeeeee; /* 这里修改分割线颜色和粗细 */
+    font-size: 14px;
+}
+.i2-row.no-border {
+    border-bottom: none; /* 最后一行去掉横线 */
+}
+
+/* 左侧标题和右侧内容的颜色 */
+.i2-label {
+    flex: 0.35;
+    color: #777; /* 左边标签稍微淡一点 */
+}
+.i2-value {
+    flex: 0.65;
+    color: #333; /* 右边内容深一点 */
+    font-weight: 500;
+}
+
+/* 跳转按钮样式 */
+.jump-bar-wrapper { width: 90%; margin: 0 auto; }
+.jump-bar { background-color: #f5d5c5; color: #8b5e3c; padding: 15px 20px; border-radius: 10px; text-align: right; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); cursor: pointer;}
+
+        .table-container { width: 90%; margin: 0 auto 30px auto; }
+        .info-table { color: white; font-size: 15px; text-shadow: 0 1px 3px rgba(0,0,0,0.8); display: flex; flex-direction: column; }
+        .table-row { display: flex; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .table-row.title-row { border-bottom: 2px solid white; }
+        .cell { flex: 1; }
+        .cell.label { flex: 0.4; color: rgba(255,255,255,0.8); } 
+        .cell.value { flex: 0.6; font-weight: 500; }
         .indent-1 { padding-left: 0.5em; }
         .indent-2 { padding-left: 1.5em; }
 
-        /* 肉色跳转栏 */
-        .jump-bar {
-            background-color: #f5d5c5; /* 经典的肉色/肤色 */
-            padding: 15px 20px;
-            margin-top: 30px;
-            border-radius: 8px;
-            text-align: right; /* 字靠右 */
-            color: #8b5e3c; /* 深咖色文字，与肉色背景更搭 */
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-
-        .jump-bar:active {
-            opacity: 0.8;
-        }
+        .jump-bar-wrapper { width: 90%; margin: 0 auto; }
+        .jump-bar { background-color: #f5d5c5; color: #8b5e3c; padding: 15px 20px; border-radius: 10px; text-align: right; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); cursor: pointer;}
+        .pinkbk{ background-color: #fff9f9;}
+        .whitebk
     </style>
 </head>
 <body>
 
 <div class="app-container">
 
+    <!-- ========== Page A ========== -->
     <div id="pageA" class="page-content active">
         <div class="page-a-content">
             <div class="carousel-wrapper">
-                <div class="banner" id="banner-scroll">
+                <div class="banner">
                     <div class="banner-item"><img src="./h2.jpg"></div>
                     <div class="banner-item"><img src="https://placehold.co/600x300/74b9ff/fff?text=P2"></div>
-                    <div class="banner-item"><img src="https://placehold.co/600x300/55efc4/fff?text=P3"></div>
                 </div>
-                
             </div>
             <div class="notice-bar"><img src="./Hb2.jpg"></div>
             <div class="oa-grid">
@@ -237,11 +278,11 @@
                 <div class="oa-item"><img src="./fic3.jpg" class="oa-icon-img"><span>Fic3</span></div>
                 <div class="oa-item"><img src="./fic4.jpg" class="oa-icon-img"><span>Fic4</span></div>
                 <div class="oa-item"><img src="./fic5.jpg" class="oa-icon-img"><span>Fic5</span></div>
-                <div class="oa-item"></div><div class="oa-item"></div><div class="oa-item"></div>
             </div>
         </div>
     </div>
 
+    <!-- ========== Page B ========== -->
     <div id="pageB" class="page-content">
         <div class="page-b-wrapper">
             <div class="f1-blue-bg"></div>
@@ -254,7 +295,7 @@
                     <div class="sub-nav-item" onclick="tabB('B3', this)">B3</div>
                 </div>
 
-                <!-- ========== B1 页面 ========== -->
+                <!-- B1 扫码页面 -->
                 <div id="subB1" class="sub-page active">
                     <div id="qr-reader-container">
                         <div id="qr-reader" style="flex:1;"></div>
@@ -284,7 +325,7 @@
                     </div>
                 </div>
 
-                <!-- ========== B2 页面 ========== -->
+                <!-- B2 输入页面 -->
                 <div id="subB2" class="sub-page">
                     <img src="https://placehold.co/400x120/74b9ff/fff?text=Header" style="width:100%; border-radius:10px; flex-shrink:0;">
                     
@@ -302,20 +343,28 @@
                     <img src="https://placehold.co/400x100/eeeeee/999?text=Footer" style="width:100%; border-radius:10px; flex-shrink:0; margin-bottom:10px;">
                 </div>
 
-                <!-- ========== B3 页面 ========== -->
+                <!-- B3 感应页面 -->
                 <div id="subB3" class="sub-page">
                     <p style="text-align:center; font-weight:bold; margin-top:20px; color:var(--primary-blue);">请贴近验证设备</p>
-                    <div class="nfc-gif-box">
-                        <img src="https://placehold.co/150x150/f0f7ff/007bff?text=NFC+GIF">
+                    
+                    <div class="nfc-scan-container" style="display: flex; flex-direction: column; align-items: center;">
+                        <div class="nfc-animation"></div>
+                        <div class="nfc-gif-box">
+                            <img src="https://placehold.co/150x150/f0f7ff/007bff?text=NFC+GIF">
+                        </div>
+                        <p id="nfc-log" style="text-align:center; margin-top:20px; font-size:12px; color:#999;"></p>
+                        
+                        <button onclick="simulateNFCScan('46:48:23:58:01:01:ae:e0')" style="margin-top:30px; padding: 12px 24px; border-radius: 30px; border: 1px solid #ccc; background: #fff; color: #666; cursor: pointer;">
+                            点击模拟识别成功
+                        </button>
                     </div>
-                    <p id="nfc-log" style="text-align:center; margin-top:20px; font-size:12px; color:#999;"></p>
                 </div>
             </div>
-            
             <div style="height: 15px; flex-shrink: 0;"></div>
         </div>
     </div>
 
+    <!-- ========== Page C ========== -->
     <div id="pageC" class="page-content">
         <div class="page-c-content">
             <div class="profile-header">
@@ -331,141 +380,190 @@
         </div>
     </div>
 
+    <!-- ========== 底部导航栏 ========== -->
     <div class="bottom-nav">
         <div class="nav-item active" onclick="nav('pageA', this)">
             <span class="nav-icon">🏠</span><span>A</span>
         </div>
-        
         <div class="nav-item nav-b" onclick="nav('pageB', this)">
-            <div class="nav-b-icon">
-                <img src="./bb.png">
-            </div>
-            <span>B</span>
+            <div class="nav-b-icon"><img src="./bb.png"></div><span>B</span>
         </div>
-        
         <div class="nav-item" onclick="nav('pageC', this)">
             <span class="nav-icon">👤</span><span>C</span>
         </div>
     </div>
 
 </div>
-<div id="pageB3" class="sub-page">
-    <div class="nfc-scan-container">
-        <div class="nfc-animation"></div>
-        <p>请将设备贴近 NFC 感应区</p>
-        <button onclick="simulateNFCScan('04:A1:B2:C3')" style="margin-top:20px; opacity:0.5;">模拟读取正确UID</button>
+
+
+        
+       <!-- ================= 独立全屏验证结果页 (Page B3 Result) ================= -->
+<div id="pageB3-result">
+    <div class="result-overlay">
+        
+        <!-- 返回按钮 -->
+        <div class="back-btn" onclick="closePageB3()">
+            &lt; 返回扫描页
+        </div>
+        
+        <!-- I1：白色背景卡片容器 -->
+        <div class="result-card-i1">
+            
+            <!-- 👇这里修改印章图片地址👇 -->
+            <img src="./stamp.png" class="center-stamp" alt="印章">
+            <!-- 👆将 ./stamp.png 换成你真实的印章图片路径👆 -->
+
+            <div class="table-title">信息：</div>
+            
+            <!-- I2：#fff9f9 浅粉白背景表格容器 -->
+            <div class="table-container-i2">
+                <div class="i2-row">
+                    <div class="i2-label">项目名称</div>
+                    <div class="i2-value">正品溯源验证</div>
+                </div>
+                <div class="i2-row">
+                    <div class="i2-label">产品编号</div>
+                    <div class="i2-value">ART-2026-009</div>
+                </div>
+                <div class="i2-row">
+                    <div class="i2-label">检测批次</div>
+                    <div class="i2-value">Batch-A1</div>
+                </div>
+                <div class="i2-row">
+                    <div class="i2-label">生产地</div>
+                    <div class="i2-value">中国 · 上海</div>
+                </div>
+                <div class="i2-row no-border">
+                    <div class="i2-label">验证时间</div>
+                    <div class="i2-value" id="liveClock">加载中...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="jump-bar-wrapper">
+            <div class="jump-bar" onclick="location.href='https://your-verify-link.com'">
+                点这里跳转验证 &gt;
+            </div>
+        </div>
     </div>
 </div>
 
-<div id="verificationPage" class="full-page-result" style="display:none;">
-    <div class="result-content">
-        <div class="info-section">
-            <div class="line indent-1">信息：</div>
-            <div class="line indent-2">项目名称：正品溯源验证</div>
-            <div class="line indent-2">产品编号：ART-2026-009</div>
-            <div class="line indent-2">检测批次：Batch-A1</div>
-            <div class="line indent-2">生产地：中国·上海</div>
-            <div class="line indent-2" id="currentTime">时间：--:--:--</div>
-        </div>
-
-        <div class="jump-bar">
-            <span>点这里跳转验证 &gt;</span>
-        </div>
-    </div>
-</div>
+      
 
 <script>
     const MOCK_DB = { usedQRs: [], validCodes: ["888", "123"] };
+    const TARGET_UID = "46:48:23:58:01:01:ae:e0"; 
 
-// 修改 1: 统一 UID（确保按钮和逻辑一致）
-const TARGET_UID = "46:48:23:58:01:01:ae:e0"; 
-
-function nav(pId, el) {
-    document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.getElementById(pId).classList.add('active');
-    el.classList.add('active');
-    // 切换到 Page B 且是 B3 标签时开启感应
-    if (pId === 'pageB' && document.getElementById('subB3').classList.contains('active')) startNfc();
-}
-
-function tabB(id, el) {
-    document.querySelectorAll('.sub-nav-item').forEach(i => i.classList.remove('active'));
-    document.querySelectorAll('.sub-page').forEach(p => p.classList.remove('active'));
-    el.classList.add('active');
-    document.getElementById('sub' + id).classList.add('active');
-    if (id === 'B3') startNfc();
-}
-
-// 修改 2: 整合 NFC 监听逻辑
-let nfcRunning = false;
-async function startNfc() {
-    if (!("NDEFReader" in window) || nfcRunning) {
-        document.getElementById('nfc-log').innerText = "当前环境不支持原生NFC，请使用模拟按钮。";
-        return;
+    // ====== 导航与选项卡逻辑 ======
+    function nav(pId, el) {
+        document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById(pId).classList.add('active');
+        el.classList.add('active');
+        if (pId === 'pageB' && document.getElementById('subB3').classList.contains('active')) startNfc();
     }
-    try {
-        nfcRunning = true;
-        const ndef = new NDEFReader();
-        await ndef.scan();
-        document.getElementById('nfc-log').innerText = "系统已开启自动感应...";
-        
-        ndef.onreading = (event) => {
-            const serialNumber = event.serialNumber;
-            // 真实的 NFC 读取成功后，调用匹配逻辑
-            checkAndJump(serialNumber);
-        };
-    } catch (e) { 
-        nfcRunning = false; 
-        document.getElementById('nfc-log').innerText = "NFC 启动失败: " + e;
+
+    function tabB(id, el) {
+        document.querySelectorAll('.sub-nav-item').forEach(i => i.classList.remove('active'));
+        document.querySelectorAll('.sub-page').forEach(p => p.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById('sub' + id).classList.add('active');
+        if (id === 'B3') startNfc();
     }
-}
 
-// 修改 3: 提取统一的检测与跳转逻辑
-function checkAndJump(uid) {
-    if (uid === TARGET_UID) {
-        showVerificationPage();
-    } else {
-        alert("读取成功，但 UID 不匹配: " + uid);
+    // ====== NFC 与验证跳转逻辑 ======
+    let nfcRunning = false;
+    async function startNfc() {
+        if (!("NDEFReader" in window) || nfcRunning) {
+            document.getElementById('nfc-log').innerText = "当前环境不支持原生NFC，请点击上方按钮模拟。";
+            return;
+        }
+        try {
+            nfcRunning = true;
+            const ndef = new NDEFReader();
+            await ndef.scan();
+            document.getElementById('nfc-log').innerText = "系统已开启自动感应...";
+            
+            ndef.onreading = (event) => {
+                const serialNumber = event.serialNumber;
+                checkAndJump(serialNumber);
+            };
+        } catch (e) { 
+            nfcRunning = false; 
+            document.getElementById('nfc-log').innerText = "NFC 启动失败: " + e;
+        }
     }
-}
 
-// 模拟按钮调用这个
-function simulateNFCScan(uid) {
-    checkAndJump(uid);
-}
+    function checkAndJump(uid) {
+        if (uid === TARGET_UID) {
+            showPageB3(); // 匹配成功，显示独立的验证结果层
+        } else {
+            alert("读取成功，但 UID 不匹配: " + uid);
+        }
+    }
 
-function showVerificationPage() {
-    // 更新当前时间
-    const now = new Date();
-    const timeStr = `时间：${now.getFullYear()}-${(now.getMonth()+1)}-${now.getDate()} ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
-    document.getElementById('currentTime').innerText = timeStr;
+    function simulateNFCScan(uid) {
+        checkAndJump(uid);
+    }
 
-    // 显示验证页
-    document.getElementById('verificationPage').style.display = 'flex';
-}
+    // ====== 独立验证页 (PageB3-result) 显示与时钟逻辑 ======
+    let clockInterval = null; 
 
-// 其它原有的扫码和 B2 逻辑保持不变...
-let scanner = null;
-function startScanner() {
-    document.getElementById('qr-reader-container').style.display = 'flex';
-    if (!scanner) scanner = new Html5Qrcode("qr-reader");
-    scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, 
-    (txt) => {
-        stopScanner();
-        if (MOCK_DB.usedQRs.includes(txt)) alert("该二维码已过期！");
-        else { MOCK_DB.usedQRs.push(txt); alert("验证成功！"); }
-    }).catch(() => { alert("摄像头启动失败"); stopScanner(); });
-}
-function stopScanner() {
-    document.getElementById('qr-reader-container').style.display = 'none';
-    if (scanner) scanner.stop();
-}
-function checkB2() {
-    const val = document.getElementById('b2-input').value;
-    if (MOCK_DB.validCodes.includes(val)) alert("比对通过！");
-    else alert("无效口令！");
-}
+    function showPageB3() {
+        const page = document.getElementById('pageB3-result');
+        if (page) {
+            page.style.display = 'block'; 
+        }
+        if (clockInterval) clearInterval(clockInterval); 
+        updateLiveTime(); 
+        clockInterval = setInterval(updateLiveTime, 1000); 
+    }
+
+    function closePageB3() {
+        const page = document.getElementById('pageB3-result');
+        if (page) {
+            page.style.display = 'none'; 
+        }
+        if (clockInterval) clearInterval(clockInterval); 
+    }
+
+    function updateLiveTime() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = (now.getMonth() + 1).toString().padStart(2, '0');
+        const day = now.getDate().toString().padStart(2, '0');
+        const hh = now.getHours().toString().padStart(2, '0');
+        const mm = now.getMinutes().toString().padStart(2, '0');
+        const ss = now.getSeconds().toString().padStart(2, '0');
+
+        const fullTimeStr = `${year}-${month}-${day} ${hh}:${mm}:${ss}`;
+        const clockEl = document.getElementById('liveClock'); 
+        if (clockEl) {
+            clockEl.innerText = fullTimeStr;
+        }
+    }
+
+    // ====== 二维码与表单逻辑 ======
+    let scanner = null;
+    function startScanner() {
+        document.getElementById('qr-reader-container').style.display = 'flex';
+        if (!scanner) scanner = new Html5Qrcode("qr-reader");
+        scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, 
+        (txt) => {
+            stopScanner();
+            if (MOCK_DB.usedQRs.includes(txt)) alert("该二维码已过期！");
+            else { MOCK_DB.usedQRs.push(txt); alert("验证成功！"); }
+        }).catch(() => { alert("摄像头启动失败"); stopScanner(); });
+    }
+    function stopScanner() {
+        document.getElementById('qr-reader-container').style.display = 'none';
+        if (scanner) scanner.stop();
+    }
+    function checkB2() {
+        const val = document.getElementById('b2-input').value;
+        if (MOCK_DB.validCodes.includes(val)) alert("比对通过！");
+        else alert("无效口令！");
+    }
 </script>
 </body>
 </html>
