@@ -2,144 +2,339 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web NFC UID 读取与比对</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>综合功能 APP 原型 - 升级版</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        body {
-            font-family: system-ui, -apple-system, sans-serif;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            background-color: #f5f5f5;
+        /* ================= 基础变量与重置 ================= */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+        body, html { height: 100%; width: 100%; background-color: #f4f5f7; overflow: hidden; }
+        :root { --primary-blue: #007bff; }
+        
+        .app-container { display: flex; flex-direction: column; height: 100vh; }
+        .page-content { flex: 1; overflow-y: auto; display: none; position: relative; }
+        .page-content.active { display: block; }
+
+        /* ================= 底部导航栏 (全部带图标) ================= */
+        .bottom-nav { display: flex; height: 65px; background: white; border-top: 1px solid #ddd; z-index: 10; }
+        .nav-item {
+            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: var(--primary-blue); background: white; cursor: pointer; transition: 0.2s;
+            font-size: 13px; font-weight: bold; position: relative;
         }
-        .container {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        .nav-item.active { background: var(--primary-blue); color: white; }
+        .nav-icon { font-size: 22px; line-height: 1; margin-bottom: 3px; }
+
+        /* ================= Page A ================= */
+        .page-a-header { padding: 15px 0 10px 0; background: white; }
+        
+        /* 轮播图区域 (几乎占满，左右留白) */
+        .carousel-wrapper { width: 94%; margin: 0 auto; position: relative; }
+        .banner { 
+            height: 150px; background: #ddd; display: flex; overflow-x: auto; 
+            scroll-snap-type: x mandatory; border-radius: 12px; 
         }
-        button {
-            padding: 15px 20px;
-            font-size: 16px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            width: 100%;
+        .banner::-webkit-scrollbar { display: none; }
+        .banner-item { 
+            min-width: 100%; height: 100%; display: flex; align-items: center; 
+            justify-content: center; font-size: 18px; color: white; scroll-snap-align: center;
+            font-weight: bold;
         }
-        button:active {
-            background-color: #0056b3;
+        .banner-item:nth-child(1) { background: #ff7675; }
+        .banner-item:nth-child(2) { background: #74b9ff; }
+        .banner-item:nth-child(3) { background: #55efc4; }
+        
+        /* 进度条 */
+        .progress-bar { width: 100%; height: 4px; background: #eee; margin-top: 10px; border-radius: 2px; overflow: hidden;}
+        .progress-fill { width: 33.33%; height: 100%; background: var(--primary-blue); transition: margin-left 0.3s ease; }
+
+        /* 系统通知栏 (长与幻灯片一致，高为幻灯片的60%即90px) */
+        .notice-bar { 
+            width: 94%; height: 90px; margin: 15px auto 0; background: #ffeaa7; 
+            color: #d35400; border-radius: 12px; font-size: 14px; 
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
         }
-        /* 进度控制台样式 */
-        .console-wrapper {
-            background: #1e1e1e;
-            color: #00ff00;
-            padding: 15px;
-            border-radius: 8px;
-            font-family: monospace;
-            font-size: 14px;
-            height: 300px;
-            overflow-y: auto;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+
+        /* OA 图标区 (纯图标无外框) */
+        .oa-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 25px 10px; padding: 30px 15px; background: white; margin-top: 10px; }
+        .oa-item { display: flex; flex-direction: column; align-items: center; font-size: 13px; color: #333; }
+        .oa-icon { font-size: 34px; margin-bottom: 8px; }
+        .oa-empty { height: 50px; }
+
+        /* ================= Page B ================= */
+        .page-b-header { text-align: center; padding: 12px; font-size: 15px; color: #333; background: white; font-weight: bold; }
+        .sub-nav { display: flex; justify-content: space-around; padding: 10px; background: white; border-bottom: 1px solid #eee; }
+        .sub-nav-item { 
+            padding: 6px 25px; border-radius: 20px; color: var(--primary-blue); background: white; 
+            border: 1px solid var(--primary-blue); font-size: 14px; cursor: pointer; transition: 0.2s;
         }
-        .console-wrapper p {
-            margin: 5px 0;
-            word-wrap: break-word;
+        .sub-nav-item.active { background: var(--primary-blue); color: white; }
+        .sub-page { display: none; height: calc(100% - 100px); padding: 20px; flex-direction: column; position: relative; }
+        .sub-page.active { display: flex; }
+        
+        .separator { text-align: center; color: #ccc; letter-spacing: 4px; margin: 15px 0; user-select: none; }
+        .image-box { width: 100%; height: 120px; object-fit: cover; border-radius: 10px; background: #e0e0e0; }
+
+        /* B1 扫码页面 */
+        .b1-spacer-top { flex: 0.4; }
+        .qr-circle-btn { 
+            width: 90px; height: 90px; background: var(--primary-blue); color: white; border-radius: 50%; 
+            display: flex; justify-content: center; align-items: center; font-size: 36px;
+            margin: 0 auto; box-shadow: 0 4px 15px rgba(0,123,255,0.4); cursor: pointer;
         }
-        .log-error { color: #ff5555; }
-        .log-success { color: #55ff55; }
-        .log-info { color: #aaaaaa; }
+        .b1-spacer-mid { flex: 0.25; }
+        .b1-text-area { text-align: center; color: #555; line-height: 1.8; font-size: 14px; }
+        .b1-spacer-bottom { flex: 0.1; }
+        .b1-bottom-content { text-align: center; display: flex; flex-direction: column; gap: 10px; }
+
+        /* B2 数字验证页面 */
+        .input-group { display: flex; gap: 10px; width: 100%; }
+        .input-group input { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; outline: none;}
+        .input-group input:focus { border-color: var(--primary-blue); }
+        .input-group button { padding: 0 25px; background: var(--primary-blue); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold;}
+
+        /* B3 NFC页面 */
+        .nfc-btn { padding: 16px; background: var(--primary-blue); color: white; text-align: center; border-radius: 30px; font-size: 16px; margin-top: 30px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,123,255,0.3);}
+
+        /* 二维码扫描覆盖层 */
+        #qr-reader-container { position: absolute; top:0; left:0; width: 100%; height: 100%; background: black; z-index: 100; display: none; flex-direction: column; }
+        #qr-reader { width: 100%; flex: 1; }
+        .close-qr { color: white; text-align: center; padding: 15px; font-size: 16px; background: #333; }
+
+        /* ================= Page C ================= */
+        .profile-header { display: flex; align-items: center; padding: 30px 20px; background: white; margin-bottom: 10px; }
+        .avatar { width: 65px; height: 65px; border-radius: 50%; background: #007bff; color: white; display: flex; justify-content: center; align-items: center; font-size: 28px; margin-right: 15px; }
+        .user-info h3 { font-size: 18px; margin-bottom: 5px; color: #333;}
+        .user-info p { font-size: 13px; color: #888; }
+        .c-menu { background: white; margin-bottom: 40px; }
+        .c-menu-item { padding: 16px 20px; border-bottom: 1px solid #eee; font-size: 15px; color: #333; }
+        
+        .logout-btn { 
+            display: block; width: 85%; margin: 0 auto; padding: 15px; 
+            background: var(--primary-blue); color: white; border: none; 
+            border-radius: 30px; text-align: center; font-size: 16px; font-weight: bold; 
+            box-shadow: 0 4px 10px rgba(0,123,255,0.3);
+        }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h2>NFC UID 验证系统</h2>
-        <p>请点击下方按钮，并将 NFC 标签靠近手机背面。</p>
-        <button id="scanBtn">开始扫描 NFC</button>
-    </div>
+<div class="app-container">
 
-    <!-- 侧边/底部 进度控制台 -->
-    <div class="console-wrapper" id="consoleOutput">
-        <p class="log-info">>> 控制台已初始化，等待操作...</p>
-    </div>
-
-    <script>
-        // 模拟的数据库：允许通过的 UID 列表 (格式通常为冒号分隔的十六进制，例如 "04:A1:B2:C3:D4:E5:F6")
-        const authorizedUIDs = [
-            "04:5A:6B:7C:8D:9E:0F", 
-            "12:34:56:78",
-            // 在实际测试中，你可以先读取一次你的标签 UID，然后把它填到这里
-        ];
-
-        const scanBtn = document.getElementById('scanBtn');
-        const consoleOutput = document.getElementById('consoleOutput');
-
-        // 自定义控制台输出函数
-        function logToConsole(message, type = 'info') {
-            const p = document.createElement('p');
-            p.textContent = `>> ${message}`;
+    <div id="pageA" class="page-content active">
+        <div class="page-a-header">
+            <div class="carousel-wrapper">
+                <div class="banner" id="banner-scroll">
+                    <div class="banner-item">幻灯片 1</div>
+                    <div class="banner-item">幻灯片 2</div>
+                    <div class="banner-item">幻灯片 3</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+            </div>
             
-            if (type === 'error') p.className = 'log-error';
-            else if (type === 'success') p.className = 'log-success';
-            else p.className = 'log-info';
+            <div class="notice-bar">
+                系统动态通知展示区
+            </div>
+        </div>
 
-            consoleOutput.appendChild(p);
-            // 自动滚动到最底部
-            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        <div class="oa-grid">
+            <div class="oa-item"><div class="oa-icon">📝</div><span>Fic1</span></div>
+            <div class="oa-item"><div class="oa-icon">📊</div><span>Fic2</span></div>
+            <div class="oa-item"><div class="oa-icon">⚙️</div><span>Fic3</span></div>
+            <div class="oa-item"><div class="oa-icon">📁</div><span>Fic4</span></div>
+            <div class="oa-item"><div class="oa-icon">🔒</div><span>Fic5</span></div>
+            <div class="oa-empty"></div>
+            <div class="oa-empty"></div>
+            <div class="oa-empty"></div>
+        </div>
+    </div>
+
+    <div id="pageB" class="page-content">
+        <div class="page-b-header">请选择功能</div>
+        <div class="sub-nav">
+            <div class="sub-nav-item active" onclick="switchSubPage('B1', this)">B1</div>
+            <div class="sub-nav-item" onclick="switchSubPage('B2', this)">B2</div>
+            <div class="sub-nav-item" onclick="switchSubPage('B3', this)">B3</div>
+        </div>
+
+        <div id="subB1" class="sub-page active">
+            <div id="qr-reader-container">
+                <div id="qr-reader"></div>
+                <div class="close-qr" onclick="stopScanner()">取消扫描</div>
+            </div>
+
+            <div class="b1-spacer-top"></div>
+            <div class="qr-circle-btn" onclick="startScanner()">📷</div>
+            
+            <div class="b1-spacer-mid"></div>
+            <div class="b1-text-area">
+                <p>请对准设备二维码进行扫描</p>
+                <p>单次二维码仅限使用一次</p>
+                <p>请确保网络连接畅通</p>
+            </div>
+
+            <div class="b1-spacer-bottom"></div>
+            <div class="separator">----------</div>
+            
+            <div class="b1-bottom-content">
+                <p style="font-weight: bold; font-size: 14px;">for example</p>
+                <img src="https://placehold.co/300x80/eeeeee/999?text=Example+Image" class="image-box" alt="example">
+            </div>
+        </div>
+
+        <div id="subB2" class="sub-page">
+            <img src="https://placehold.co/400x120/74b9ff/fff?text=Header+Image" class="image-box" alt="Header">
+            <div class="separator">----------</div>
+            <div class="input-group">
+                <input type="number" id="b2-input" placeholder="输入口令 (如: 888)">
+                <button onclick="checkB2Input()">确定</button>
+            </div>
+            <div class="separator">----------</div>
+            <p style="text-align: center; color: #666; margin-bottom: 10px; font-size: 14px;">与图片描述相符的验证说明</p>
+            <img src="https://placehold.co/400x120/55efc4/fff?text=Footer+Image" class="image-box" alt="Footer">
+        </div>
+
+        <div id="subB3" class="sub-page">
+            <img src="https://placehold.co/400x120/a29bfe/fff?text=NFC+Zone" class="image-box" style="margin-bottom: 20px;">
+            <p style="text-align: center; color:#666;">请将手机背面贴近验证设备</p>
+            <div class="nfc-btn" onclick="startNfcScan()">开始扫描 NFC</div>
+            <p id="nfc-log" style="margin-top: 15px; font-family: monospace; color: #555; text-align: center;"></p>
+        </div>
+    </div>
+
+    <div id="pageC" class="page-content">
+        <div class="profile-header">
+            <div class="avatar">👤</div>
+            <div class="user-info">
+                <h3>张三 (Admin)</h3>
+                <p>ID: 88995566</p>
+            </div>
+        </div>
+        <div class="c-menu">
+            <div class="c-menu-item">C1 - 记录 Log</div>
+            <div class="c-menu-item">C2 - 用户协议</div>
+            <div class="c-menu-item">C3 - 意见反馈</div>
+        </div>
+        <button class="logout-btn" onclick="alert('已退出登录')">退出登录</button>
+    </div>
+
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="switchPage('pageA', this)">
+            <span class="nav-icon">🏠</span>
+            <span>A</span>
+        </div>
+        <div class="nav-item" onclick="switchPage('pageB', this)">
+            <span class="nav-icon">🔳</span>
+            <span>B</span>
+        </div>
+        <div class="nav-item" onclick="switchPage('pageC', this)">
+            <span class="nav-icon">👤</span>
+            <span>C</span>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const MOCK_DB = {
+        validQRs: ["AUTH-123", "VIP-999"], 
+        usedQRs: [], 
+        validB2Numbers: ["888", "123456"], 
+    };
+
+    function switchPage(pageId, element) {
+        document.querySelectorAll('.page-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        document.getElementById(pageId).classList.add('active');
+        element.classList.add('active');
+    }
+
+    function switchSubPage(subId, element) {
+        document.querySelectorAll('.sub-page').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.sub-nav-item').forEach(el => el.classList.remove('active'));
+        document.getElementById('sub' + subId).classList.add('active');
+        element.classList.add('active');
+    }
+
+    const banner = document.getElementById('banner-scroll');
+    const progressFill = document.getElementById('progress-fill');
+    banner.addEventListener('scroll', () => {
+        const scrollWidth = banner.scrollWidth - banner.clientWidth;
+        const scrolled = banner.scrollLeft;
+        let percentage = (scrolled / scrollWidth);
+        if(isNaN(percentage)) percentage = 0;
+        progressFill.style.marginLeft = (percentage * 66.66) + "%"; 
+    });
+
+    let html5QrcodeScanner = null;
+    function startScanner() {
+        const container = document.getElementById('qr-reader-container');
+        container.style.display = 'flex';
+        if (!html5QrcodeScanner) {
+            html5QrcodeScanner = new Html5Qrcode("qr-reader");
         }
-
-        scanBtn.addEventListener('click', async () => {
-            logToConsole('检查设备是否支持 Web NFC...');
-
-            if (!("NDEFReader" in window)) {
-                logToConsole('此浏览器不支持 Web NFC。请确保使用 Android 上的 Chrome 浏览器，并通过 HTTPS 访问。', 'error');
-                return;
-            }
-
-            try {
-                const ndef = new NDEFReader();
-                logToConsole('请求 NFC 权限并启动扫描...');
-                
-                await ndef.scan();
-                logToConsole('扫描已启动！请将 NFC 标签靠近手机背面。', 'success');
-
-                // 监听读取错误
-                ndef.onreadingerror = (event) => {
-                    logToConsole('读取失败：无法解析该标签，或者靠近时间太短。', 'error');
-                };
-
-                // 监听成功读取事件
-                ndef.onreading = (event) => {
-                    const uid = event.serialNumber; // 获取标签的 UID
-                    
-                    if (!uid) {
-                        logToConsole('读取成功，但该标签没有暴露 UID。', 'error');
-                        return;
-                    }
-
-                    logToConsole(`检测到标签！获取 UID: [${uid}]`);
-
-                    // 核心逻辑：比对 UID
-                    logToConsole('正在与数据库进行比对...');
-                    if (authorizedUIDs.includes(uid)) {
-                        logToConsole(`验证通过！UID ${uid} 是授权设备。`, 'success');
-                        // 这里可以触发后续的业务逻辑，比如开门、打卡等
-                    } else {
-                        logToConsole(`验证拒绝！未知的 UID：${uid}`, 'error');
-                    }
-                };
-
-            } catch (error) {
-                logToConsole(`发生错误: ${error.message}`, 'error');
-                if (error.name === 'NotAllowedError') {
-                    logToConsole('用户拒绝了 NFC 权限。', 'error');
-                }
-            }
+        html5QrcodeScanner.start(
+            { facingMode: "environment" }, 
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            (decodedText) => {
+                stopScanner();
+                handleQRScan(decodedText);
+            },
+            (error) => { }
+        ).catch(err => {
+            alert("无法调用摄像头，请在手机端测试并允许权限。");
+            stopScanner();
         });
-    </script>
+    }
+
+    function stopScanner() {
+        document.getElementById('qr-reader-container').style.display = 'none';
+        if (html5QrcodeScanner && html5QrcodeScanner.isScanning) {
+            html5QrcodeScanner.stop();
+        }
+    }
+
+    function handleQRScan(qrText) {
+        if (MOCK_DB.usedQRs.includes(qrText)) {
+            alert(`⚠️ 错误：该二维码已过期！\n[内容: ${qrText}]`);
+            return;
+        }
+        MOCK_DB.usedQRs.push(qrText); 
+        alert(`✅ 扫码成功！\n比对完成，该二维码现已作废。\n[内容: ${qrText}]`);
+    }
+
+    function checkB2Input() {
+        const val = document.getElementById('b2-input').value;
+        if (!val) { alert("请输入数字"); return; }
+        if (MOCK_DB.validB2Numbers.includes(val)) {
+            alert("✅ 验证成功！");
+        } else {
+            alert("❌ 验证失败！");
+        }
+    }
+
+    async function startNfcScan() {
+        const logEl = document.getElementById('nfc-log');
+        if (!("NDEFReader" in window)) {
+            alert("请在 Android Chrome HTTPS 环境下使用此功能。"); return;
+        }
+        try {
+            const ndef = new NDEFReader();
+            await ndef.scan();
+            logEl.innerText = ">> 系统已就绪，请贴紧NFC标签...";
+            ndef.onreading = (event) => {
+                const uid = event.serialNumber;
+                logEl.innerText = `>> 读取成功 UID: ${uid}`;
+                alert(`读取到设备信息\nUID: ${uid}\n已发送至数据库比对...`);
+            };
+        } catch (error) {
+            alert("NFC 启动失败，请检查设备。");
+        }
+    }
+</script>
+
 </body>
 </html>
