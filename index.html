@@ -323,6 +323,49 @@
         .indent-2 { padding-left: 1.5em !important; }
         
         .result-tab-content { display: flex; flex-direction: column; }
+        /* ================= 缓冲加载页样式 ================= */
+        #loading-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #f5f6f8; /* 整体背景遮挡 */
+            z-index: 3000; /* 层级最高，盖住所有未加载完的东西 */
+            display: flex; align-items: center; justify-content: center;
+        }
+        .loading-box {
+            background-color: #e8e9ec; /* 浅灰色正方形 */
+            width: 120px; height: 120px;
+            border-radius: 16px; /* 圆角 */
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .spinner {
+            width: 32px; height: 32px;
+            border: 4px solid #d1d4d9;
+            border-top-color: var(--primary-blue); /* 蓝色的加载圈 */
+            border-radius: 50%;
+            animation: spin 1s linear infinite; /* 一直旋转 */
+            margin-bottom: 12px;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .loading-text { font-size: 13px; color: #555; font-weight: bold; }
+
+        /* ================= 错误弹窗样式 ================= */
+        #error-popup {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
+            background: rgba(0,0,0,0.5); z-index: 4000;
+            display: none; align-items: center; justify-content: center;
+        }
+        .error-box {
+            background: white; width: 75%; border-radius: 16px; padding: 30px 20px;
+            text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            animation: popIn 0.3s ease-out forwards; /* 弹出动画 */
+        }
+        @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .error-icon { font-size: 45px; margin-bottom: 10px; }
+        .error-title { font-size: 18px; font-weight: bold; color: #333; margin-bottom: 8px; }
+        .error-btn {
+            background: var(--primary-blue); color: white; padding: 12px 0;
+            border-radius: 25px; font-size: 16px; margin-top: 20px; font-weight: bold; cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -466,8 +509,18 @@
         
        <!-- ================= 独立全屏验证结果页 (Page B3 Result) ================= -->
 <div id="pageB3-result">
+    
+    <!-- 缓冲加载页 (默认层级最高，图片加载完后消失) -->
+    <div id="loading-screen">
+        <div class="loading-box">
+            <div class="spinner"></div>
+            <div class="loading-text">正在加载...</div>
+        </div>
+    </div>
+
     <div class="result-overlay">
         
+        <!-- 返回按钮 -->
         <div class="back-btn" onclick="closePageB3()">&lt; 重新扫描</div>
         
         <!-- 悬浮在背景上的产品标题 -->
@@ -476,7 +529,7 @@
             <div class="f-spec">规格：旗舰标准版 / 500g</div>
         </div>
         
-        <!-- 悬浮在背景上的纯文字选项卡，带 | 分隔 -->
+        <!-- 悬浮在背景上的纯文字选项卡 -->
         <div class="floating-tabs">
             <span class="tab-text active" onclick="switchResultTab('G1', this)">生产信息</span>
             <span class="tab-divider">|</span>
@@ -491,35 +544,32 @@
 
             <!-- ================= G1 生产信息 ================= -->
             <div id="result-G1" class="result-tab-content active">
-                <!-- 标题行：白色背景（继承卡片底色） -->
                 <div class="table-row title-row indent-1">
                     <div class="cell">生产明细报告</div>
                 </div>
-                
-                <!-- 数据行：浅粉色背景区块，减小了留白 -->
                 <div class="pink-data-block">
                     <div class="table-row indent-2">
-                        <div class="cell label">产品编号:</div>
+                        <div class="cell label">产品编号</div>
                         <div class="cell value blue-data">ART-2026-009</div>
                     </div>
                     <div class="table-row indent-2">
-                        <div class="cell label">检测批次:</div>
+                        <div class="cell label">检测批次</div>
                         <div class="cell value blue-data">Batch-A1</div>
                     </div>
                     <div class="table-row indent-2">
-                        <div class="cell label">生产地:</div>
+                        <div class="cell label">生产地</div>
                         <div class="cell value blue-data">中国 · 上海</div>
                     </div>
                     <div class="table-row indent-2">
-                        <div class="cell label">生产车间:</div>
+                        <div class="cell label">生产车间</div>
                         <div class="cell value blue-data">第一制造中心</div>
                     </div>
                     <div class="table-row indent-2">
-                        <div class="cell label">生产日期:</div>
+                        <div class="cell label">生产日期</div>
                         <div class="cell value blue-data">2026-04-06</div>
                     </div>
                     <div class="table-row indent-2 no-border">
-                        <div class="cell label">验证时间:</div>
+                        <div class="cell label">验证时间</div>
                         <div class="cell value blue-data liveClockText">加载中...</div>
                     </div>
                 </div>
@@ -527,31 +577,28 @@
 
             <!-- ================= G2 检测报告 ================= -->
             <div id="result-G2" class="result-tab-content" style="display: none;">
-                <!-- 标题行：白色背景 -->
                 <div class="table-row title-row indent-1">
                     <div class="cell">质量检测报告</div>
                 </div>
-                
-                <!-- 数据行：浅粉色背景区块 -->
                 <div class="pink-data-block">
                     <div class="table-row indent-2">
-                        <div class="cell label">检验机构:</div>
+                        <div class="cell label">检验机构</div>
                         <div class="cell value blue-data">国家检测中心</div>
                     </div>
                     <div class="table-row indent-2">
-                        <div class="cell label">报告单号:</div>
+                        <div class="cell label">报告单号</div>
                         <div class="cell value blue-data">REP-889900</div>
                     </div>
                     <div class="table-row indent-2">
-                        <div class="cell label">检验员:</div>
+                        <div class="cell label">检验员</div>
                         <div class="cell value blue-data">张工</div>
                     </div>
                     <div class="table-row indent-2">
-                        <div class="cell label">质检状态:</div>
+                        <div class="cell label">质检状态</div>
                         <div class="cell value blue-data">各项指标合格</div>
                     </div>
                     <div class="table-row indent-2 no-border">
-                        <div class="cell label">验证时间:</div>
+                        <div class="cell label">验证时间</div>
                         <div class="cell value blue-data liveClockText">加载中...</div>
                     </div>
                 </div>
@@ -566,6 +613,16 @@
         </div>
     </div>
 </div>
+
+<!-- ================= 失败错误弹窗 ================= -->
+<div id="error-popup">
+    <div class="error-box">
+        <div class="error-icon">⚠️</div>
+        <div class="error-title">比对不通过</div>
+        <div style="font-size:14px; color:#666;">无法识别该NFC芯片或芯片已失效</div>
+        <div class="error-btn" onclick="closeErrorPopup()">确定</div>
+    </div>
+</div>
         
 
       
@@ -574,7 +631,7 @@
     const MOCK_DB = { usedQRs: [], validCodes: ["888", "123"] };
     const TARGET_UID = "46:48:23:58:01:01:ae:e0"; 
 
-    // ====== 1. 导航与选项卡逻辑 ======
+    // ===== 1. 导航与选项卡切换 =====
     function nav(pId, el) {
         document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -591,7 +648,14 @@
         if (id === 'B3') startNfc();
     }
 
-    // ====== 2. NFC 与验证跳转逻辑 ======
+    function switchResultTab(tabId, element) {
+        document.querySelectorAll('.result-tab-content').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.tab-text').forEach(btn => btn.classList.remove('active'));
+        document.getElementById('result-' + tabId).style.display = 'flex';
+        element.classList.add('active');
+    }
+
+    // ===== 2. NFC 读取与校验 =====
     let nfcRunning = false;
     async function startNfc() {
         if (!("NDEFReader" in window) || nfcRunning) {
@@ -603,68 +667,73 @@
             const ndef = new NDEFReader();
             await ndef.scan();
             document.getElementById('nfc-log').innerText = "系统已开启自动感应...";
-            
-            ndef.onreading = (event) => {
-                const serialNumber = event.serialNumber;
-                checkAndJump(serialNumber);
-            };
+            ndef.onreading = (event) => { checkAndJump(event.serialNumber); };
         } catch (e) { 
             nfcRunning = false; 
             document.getElementById('nfc-log').innerText = "NFC 启动失败: " + e;
         }
     }
 
+    // 匹配校验逻辑
     function checkAndJump(uid) {
         if (uid === TARGET_UID) {
-            showPageB3(); // 匹配成功，显示独立的验证结果层
+            showPageB3(); // UID正确 -> 走加载圈进入结果页
         } else {
-            alert("读取成功，但 UID 不匹配: " + uid);
+            document.getElementById('error-popup').style.display = 'flex'; // UID错误 -> 弹窗
         }
     }
-
-    // 模拟按钮触发的函数
+    
+    // 模拟按钮
     function simulateNFCScan(uid) {
         checkAndJump(uid);
     }
 
-    // ====== 3. 独立验证页 (PageB3-result) 逻辑 ======
+    // 关闭错误弹窗
+    function closeErrorPopup() {
+        document.getElementById('error-popup').style.display = 'none';
+    }
+
+    // ===== 3. 独立结果页逻辑 (含缓冲与秒动时钟) =====
     let clockInterval = null; 
 
-    // 显示结果页
     function showPageB3() {
         const page = document.getElementById('pageB3-result');
+        const loader = document.getElementById('loading-screen');
+        
         if (page) {
             page.style.display = 'block'; 
+            loader.style.display = 'flex'; // 唤出加载圈
+
+            // 获取背景图预加载
+            const bgUrlMatch = window.getComputedStyle(page).backgroundImage.match(/url\(['"]?(.*?)['"]?\)/);
+            if (bgUrlMatch && bgUrlMatch[1]) {
+                const img = new Image();
+                img.src = bgUrlMatch[1]; 
+                img.onload = () => { setTimeout(() => { loader.style.display = 'none'; }, 500); };
+                img.onerror = () => { loader.style.display = 'none'; };
+            } else {
+                loader.style.display = 'none';
+            }
         }
+        
         if (clockInterval) clearInterval(clockInterval); 
         updateLiveTime(); 
         clockInterval = setInterval(updateLiveTime, 1000); 
     }
 
-    // 关闭结果页
     function closePageB3() {
         const page = document.getElementById('pageB3-result');
         if (page) {
             page.style.display = 'none'; 
         }
         if (clockInterval) clearInterval(clockInterval); 
-    }
-
-    // 结果页内部的 G1/G2 选项卡切换
-  // ===== 1. 选项卡切换逻辑 =====
-    function switchResultTab(tabId, element) {
-        // 隐藏所有表格内容
-        document.querySelectorAll('.result-tab-content').forEach(el => el.style.display = 'none');
-        // 移除所有悬浮文字按钮的 active 状态
-        document.querySelectorAll('.tab-text').forEach(btn => btn.classList.remove('active'));
         
-        // 显示选中的表格内容
-        document.getElementById('result-' + tabId).style.display = 'flex';
-        // 给当前点击的文字加上 active 状态
-        element.classList.add('active');
+        // 重置加载圈状态，确保下次打开还有加载动画
+        const loader = document.getElementById('loading-screen');
+        if(loader) loader.style.display = 'flex'; 
     }
 
-    // 更新两个表格的双时钟
+    // 更新所有的秒动时间
     function updateLiveTime() {
         const now = new Date();
         const year = now.getFullYear();
@@ -675,15 +744,11 @@
         const ss = now.getSeconds().toString().padStart(2, '0');
 
         const fullTimeStr = `${year}-${month}-${day} ${hh}:${mm}:${ss}`;
-        
-        // 选中页面上所有 class 包含 liveClockText 的元素，统一更新文本
         const clocks = document.querySelectorAll('.liveClockText'); 
-        clocks.forEach(clock => {
-            clock.innerText = fullTimeStr;
-        });
+        clocks.forEach(clock => { clock.innerText = fullTimeStr; });
     }
 
-    // ====== 4. 二维码扫码与 B2 手动输入逻辑 ======
+    // ===== 4. 其他组件逻辑 (扫码与B2验证) =====
     let scanner = null;
     function startScanner() {
         document.getElementById('qr-reader-container').style.display = 'flex';
@@ -704,7 +769,8 @@
         if (MOCK_DB.validCodes.includes(val)) alert("比对通过！");
         else alert("无效口令！");
     }
-</script>
+    
+
 </script>
 </body>
 </html>
