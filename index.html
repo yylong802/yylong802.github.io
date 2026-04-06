@@ -174,69 +174,68 @@
     z-index: 10;
 }
 
-/* ---------------- I1：白色卡片样式 ---------------- */
-.result-card-i1 {
-    background-color: white; /* I1 的白色背景 */
+/* I1 外层白色卡片 */
+.info-card-i1 {
     width: 90%;
-    margin: 0 auto 20px auto; /* 距离底部跳转按钮 20px */
-    border-radius: 12px;
-    padding: 20px;
-    position: relative; /* 核心：让印章可以在它内部绝对定位 */
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    z-index: 10;
+    background-color: #ffffff; /* I1 白色背景 */
+    border-radius: 15px;
+    padding: 10px;
+    position: relative; /* 必须为 relative，印章才能居中 */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    margin: 0 auto 20px auto;
 }
 
-/* ---- 印章样式（精准居中） ---- */
-.center-stamp {
+/* 印章精准居中 */
+.verify-stamp {
     position: absolute;
-    top: 50%;   /* 垂直居中 */
-    left: 50%;  /* 水平居中 */
-    transform: translate(-50%, -50%) rotate(-10deg); /* 完美居中并微微左倾斜 */
-    width: 110px;        /* 调整印章的大小 */
-    opacity: 0.85;       /* 调整透明度：让底下的字透过来一点 */
-    pointer-events: none;/* 核心：点击穿透，鼠标不会误触到图片 */
-    z-index: 5;          /* 层级介于 I1底色 和 I2表格 之间 */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-10deg); /* 绝对居中+微微倾斜 */
+    width: 120px; /* 修改这里调整印章大小 */
+    z-index: 5;   /* 确保印章在背景之上，文字之下（或之上，取决于 z-index） */
+    opacity: 0.8; /* 稍微透明，更真实 */
+    pointer-events: none; /* 防止遮挡点击 */
 }
 
-.table-title {
-    font-size: 16px;
-    font-weight: bold;
-    color: #333;
+/* 顶部蓝色标题 */
+.product-header {
+    text-align: center;
     margin-bottom: 15px;
     position: relative;
     z-index: 10;
 }
+.blue-text-main { color: #007bff; font-size: 18px; font-weight: bold; margin-bottom: 5px; }
+.blue-text-sub { color: #007bff; font-size: 14px; opacity: 0.9; }
 
-/* ---------------- I2：内部表格样式 ---------------- */
-.table-container-i2 {
-    background-color: #fff9f9; /* I2 的浅粉白背景 */
-    border-radius: 8px;
-    padding: 5px 15px;
+/* I2 内部粉白色表格 */
+.info-table-i2 {
+    background-color: #fff9f9; /* I2 背景颜色 */
+    border-radius: 10px;
+    padding: 10px 15px;
     position: relative;
-    z-index: 10; /* 确保文字在印章之上，如果想让印章盖在文字上，把这里改成 1 */
+    z-index: 10;
 }
 
-/* 表格的浅灰色分割线 */
+/* 浅灰色分割线 */
 .i2-row {
     display: flex;
-    padding: 12px 0;
-    border-bottom: 1px solid #eeeeee; /* 这里修改分割线颜色和粗细 */
-    font-size: 14px;
+    padding: 10px 0;
+    border-bottom: 1px solid #eeeeee; /* 浅灰色线 */
 }
-.i2-row.no-border {
-    border-bottom: none; /* 最后一行去掉横线 */
+.i2-row.no-border { border-bottom: none; }
+
+/* 表头文字 */
+.group-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: #333;
+    padding: 10px 0 5px 0;
 }
 
-/* 左侧标题和右侧内容的颜色 */
-.i2-label {
-    flex: 0.35;
-    color: #777; /* 左边标签稍微淡一点 */
-}
-.i2-value {
-    flex: 0.65;
-    color: #333; /* 右边内容深一点 */
-    font-weight: 500;
-}
+/* 蓝色数据字 */
+.blue-data { color: #020101 !important; font-weight: 500; text-align: right; }
+.i2-label { flex: 0.4; color: #666; font-size: 14px; }
+.i2-value { flex: 0.6; font-size: 14px; }
 
 /* 跳转按钮样式 */
 .jump-bar-wrapper { width: 90%; margin: 0 auto; }
@@ -247,7 +246,7 @@
         .table-row { display: flex; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
         .table-row.title-row { border-bottom: 2px solid white; }
         .cell { flex: 1; }
-        .cell.label { flex: 0.4; color: rgba(255,255,255,0.8); } 
+        .cell.label { flex: 0.4; color: rgba(0, 0, 0, 0.8); } 
         .cell.value { flex: 0.6; font-weight: 500; }
         .indent-1 { padding-left: 0.5em; }
         .indent-2 { padding-left: 1.5em; }
@@ -255,7 +254,75 @@
         .jump-bar-wrapper { width: 90%; margin: 0 auto; }
         .jump-bar { background-color: #f5d5c5; color: #8b5e3c; padding: 15px 20px; border-radius: 10px; text-align: right; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); cursor: pointer;}
         .pinkbk{ background-color: #fff9f9;}
-        .whitebk
+        
+        /* ================= 背景悬浮字与选项卡 ================= */
+        .floating-product-title {
+            width: 90%;
+            margin: 0 auto 12px auto;
+            text-align: center;
+            color: white; 
+            text-shadow: 0 2px 6px rgba(0,0,0,0.6); 
+        }
+        .floating-product-title .f-name { font-size: 22px; font-weight: 900; margin-bottom: 5px; letter-spacing: 1px; }
+        .floating-product-title .f-spec { font-size: 14px; opacity: 0.9; }
+
+        /* 纯文字选项卡，悬浮在背景上 */
+        .floating-tabs {
+            text-align: center;
+            margin-bottom: 15px; /* 选项卡与下方白色卡片的距离 */
+            color: white;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+            font-size: 16px;
+        }
+        .tab-text {
+            cursor: pointer;
+            opacity: 0.7; /* 未选中时稍微透明一点 */
+            transition: 0.3s;
+        }
+        .tab-text.active {
+            opacity: 1; /* 选中时全不透明 */
+            font-weight: bold;
+            color: #ffffff; /* 保持白色，也可以换成 var(--primary-blue) */
+        }
+        .tab-divider {
+            margin: 0 15px; /* | 符号前后的间距 */
+            opacity: 0.5;
+            font-size: 14px;
+        }
+
+        /* ================= 卡片内部排版 ================= */
+        /* 表格标题行 (保留白色背景) */
+        .title-row {
+            padding: 5px 0 10px 0 !important;
+            font-weight: bold;
+            color: #333;
+            border-bottom: none !important; /* 去掉标题下的线，和粉色区块更连贯 */
+        }
+
+        /* 数据行容器 (浅粉色背景，减小留白间距) */
+        .pink-data-block {
+            background-color: #fff9f9;
+            border-radius: 8px;
+            padding: 4px 10px; /* 【核心修改】将原本的内边距减少了50% */
+            position: relative;
+            z-index: 10;
+        }
+
+        /* 数据行排版 */
+        .pink-data-block .table-row {
+            padding: 8px 0; /* 缩小行间距 */
+            border-bottom: 1px solid #eeeeee;
+        }
+        .pink-data-block .table-row.no-border { border-bottom: none; }
+
+        /* 强制蓝色数据字 */
+        .blue-data { color: #020101 !important; font-weight: 600; }
+
+        /* 缩进控制 */
+        .indent-1 { padding-left: 0.5em !important; }
+        .indent-2 { padding-left: 1.5em !important; }
+        
+        .result-tab-content { display: flex; flex-direction: column; }
     </style>
 </head>
 <body>
@@ -401,45 +468,97 @@
 <div id="pageB3-result">
     <div class="result-overlay">
         
-        <!-- 返回按钮 -->
-        <div class="back-btn" onclick="closePageB3()">
-            &lt; 返回扫描页
+        <div class="back-btn" onclick="closePageB3()">&lt; 重新扫描</div>
+        
+        <!-- 悬浮在背景上的产品标题 -->
+        <div class="floating-product-title">
+            <div class="f-name">星耀版全息溯源票据</div>
+            <div class="f-spec">规格：旗舰标准版 / 500g</div>
         </div>
         
-        <!-- I1：白色背景卡片容器 -->
-        <div class="result-card-i1">
+        <!-- 悬浮在背景上的纯文字选项卡，带 | 分隔 -->
+        <div class="floating-tabs">
+            <span class="tab-text active" onclick="switchResultTab('G1', this)">生产信息</span>
+            <span class="tab-divider">|</span>
+            <span class="tab-text" onclick="switchResultTab('G2', this)">检测报告</span>
+        </div>
+        
+        <!-- I1 白色底板卡片 -->
+        <div class="info-card-i1">
             
-            <!-- 👇这里修改印章图片地址👇 -->
-            <img src="./stamp.png" class="center-stamp" alt="印章">
-            <!-- 👆将 ./stamp.png 换成你真实的印章图片路径👆 -->
+            <!-- 居中印章 -->
+            <img src="./stamp.png" class="verify-stamp" alt="认证盖章">
 
-            <div class="table-title">信息：</div>
-            
-            <!-- I2：#fff9f9 浅粉白背景表格容器 -->
-            <div class="table-container-i2">
-                <div class="i2-row">
-                    <div class="i2-label">项目名称</div>
-                    <div class="i2-value">正品溯源验证</div>
+            <!-- ================= G1 生产信息 ================= -->
+            <div id="result-G1" class="result-tab-content active">
+                <!-- 标题行：白色背景（继承卡片底色） -->
+                <div class="table-row title-row indent-1">
+                    <div class="cell">生产明细报告</div>
                 </div>
-                <div class="i2-row">
-                    <div class="i2-label">产品编号</div>
-                    <div class="i2-value">ART-2026-009</div>
-                </div>
-                <div class="i2-row">
-                    <div class="i2-label">检测批次</div>
-                    <div class="i2-value">Batch-A1</div>
-                </div>
-                <div class="i2-row">
-                    <div class="i2-label">生产地</div>
-                    <div class="i2-value">中国 · 上海</div>
-                </div>
-                <div class="i2-row no-border">
-                    <div class="i2-label">验证时间</div>
-                    <div class="i2-value" id="liveClock">加载中...</div>
+                
+                <!-- 数据行：浅粉色背景区块，减小了留白 -->
+                <div class="pink-data-block">
+                    <div class="table-row indent-2">
+                        <div class="cell label">产品编号:</div>
+                        <div class="cell value blue-data">ART-2026-009</div>
+                    </div>
+                    <div class="table-row indent-2">
+                        <div class="cell label">检测批次:</div>
+                        <div class="cell value blue-data">Batch-A1</div>
+                    </div>
+                    <div class="table-row indent-2">
+                        <div class="cell label">生产地:</div>
+                        <div class="cell value blue-data">中国 · 上海</div>
+                    </div>
+                    <div class="table-row indent-2">
+                        <div class="cell label">生产车间:</div>
+                        <div class="cell value blue-data">第一制造中心</div>
+                    </div>
+                    <div class="table-row indent-2">
+                        <div class="cell label">生产日期:</div>
+                        <div class="cell value blue-data">2026-04-06</div>
+                    </div>
+                    <div class="table-row indent-2 no-border">
+                        <div class="cell label">验证时间:</div>
+                        <div class="cell value blue-data liveClockText">加载中...</div>
+                    </div>
                 </div>
             </div>
-        </div>
 
+            <!-- ================= G2 检测报告 ================= -->
+            <div id="result-G2" class="result-tab-content" style="display: none;">
+                <!-- 标题行：白色背景 -->
+                <div class="table-row title-row indent-1">
+                    <div class="cell">质量检测报告</div>
+                </div>
+                
+                <!-- 数据行：浅粉色背景区块 -->
+                <div class="pink-data-block">
+                    <div class="table-row indent-2">
+                        <div class="cell label">检验机构:</div>
+                        <div class="cell value blue-data">国家检测中心</div>
+                    </div>
+                    <div class="table-row indent-2">
+                        <div class="cell label">报告单号:</div>
+                        <div class="cell value blue-data">REP-889900</div>
+                    </div>
+                    <div class="table-row indent-2">
+                        <div class="cell label">检验员:</div>
+                        <div class="cell value blue-data">张工</div>
+                    </div>
+                    <div class="table-row indent-2">
+                        <div class="cell label">质检状态:</div>
+                        <div class="cell value blue-data">各项指标合格</div>
+                    </div>
+                    <div class="table-row indent-2 no-border">
+                        <div class="cell label">验证时间:</div>
+                        <div class="cell value blue-data liveClockText">加载中...</div>
+                    </div>
+                </div>
+            </div>
+
+        </div> 
+        
         <div class="jump-bar-wrapper">
             <div class="jump-bar" onclick="location.href='https://your-verify-link.com'">
                 点这里跳转验证 &gt;
@@ -447,6 +566,7 @@
         </div>
     </div>
 </div>
+        
 
       
 
@@ -454,7 +574,7 @@
     const MOCK_DB = { usedQRs: [], validCodes: ["888", "123"] };
     const TARGET_UID = "46:48:23:58:01:01:ae:e0"; 
 
-    // ====== 导航与选项卡逻辑 ======
+    // ====== 1. 导航与选项卡逻辑 ======
     function nav(pId, el) {
         document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -471,7 +591,7 @@
         if (id === 'B3') startNfc();
     }
 
-    // ====== NFC 与验证跳转逻辑 ======
+    // ====== 2. NFC 与验证跳转逻辑 ======
     let nfcRunning = false;
     async function startNfc() {
         if (!("NDEFReader" in window) || nfcRunning) {
@@ -502,13 +622,15 @@
         }
     }
 
+    // 模拟按钮触发的函数
     function simulateNFCScan(uid) {
         checkAndJump(uid);
     }
 
-    // ====== 独立验证页 (PageB3-result) 显示与时钟逻辑 ======
+    // ====== 3. 独立验证页 (PageB3-result) 逻辑 ======
     let clockInterval = null; 
 
+    // 显示结果页
     function showPageB3() {
         const page = document.getElementById('pageB3-result');
         if (page) {
@@ -519,6 +641,7 @@
         clockInterval = setInterval(updateLiveTime, 1000); 
     }
 
+    // 关闭结果页
     function closePageB3() {
         const page = document.getElementById('pageB3-result');
         if (page) {
@@ -527,6 +650,21 @@
         if (clockInterval) clearInterval(clockInterval); 
     }
 
+    // 结果页内部的 G1/G2 选项卡切换
+  // ===== 1. 选项卡切换逻辑 =====
+    function switchResultTab(tabId, element) {
+        // 隐藏所有表格内容
+        document.querySelectorAll('.result-tab-content').forEach(el => el.style.display = 'none');
+        // 移除所有悬浮文字按钮的 active 状态
+        document.querySelectorAll('.tab-text').forEach(btn => btn.classList.remove('active'));
+        
+        // 显示选中的表格内容
+        document.getElementById('result-' + tabId).style.display = 'flex';
+        // 给当前点击的文字加上 active 状态
+        element.classList.add('active');
+    }
+
+    // 更新两个表格的双时钟
     function updateLiveTime() {
         const now = new Date();
         const year = now.getFullYear();
@@ -537,13 +675,15 @@
         const ss = now.getSeconds().toString().padStart(2, '0');
 
         const fullTimeStr = `${year}-${month}-${day} ${hh}:${mm}:${ss}`;
-        const clockEl = document.getElementById('liveClock'); 
-        if (clockEl) {
-            clockEl.innerText = fullTimeStr;
-        }
+        
+        // 选中页面上所有 class 包含 liveClockText 的元素，统一更新文本
+        const clocks = document.querySelectorAll('.liveClockText'); 
+        clocks.forEach(clock => {
+            clock.innerText = fullTimeStr;
+        });
     }
 
-    // ====== 二维码与表单逻辑 ======
+    // ====== 4. 二维码扫码与 B2 手动输入逻辑 ======
     let scanner = null;
     function startScanner() {
         document.getElementById('qr-reader-container').style.display = 'flex';
@@ -564,6 +704,7 @@
         if (MOCK_DB.validCodes.includes(val)) alert("比对通过！");
         else alert("无效口令！");
     }
+</script>
 </script>
 </body>
 </html>
