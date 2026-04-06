@@ -360,7 +360,7 @@
             animation: popIn 0.3s ease-out forwards; /* 弹出动画 */
         }
         @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-        .error-icon { font-size: 45px; margin-bottom: 10px; }
+        /*.error-icon { font-size: 45px; margin-bottom: 10px; }*/
         .error-title { font-size: 18px; font-weight: bold; color: #333; margin-bottom: 8px; }
         .error-btn {
             background: var(--primary-blue); color: white; padding: 12px 0;
@@ -617,9 +617,9 @@
 <!-- ================= 失败错误弹窗 ================= -->
 <div id="error-popup">
     <div class="error-box">
-        <div class="error-icon">⚠️</div>
-        <div class="error-title">比对不通过</div>
-        <div style="font-size:14px; color:#666;">无法识别该NFC芯片或芯片已失效</div>
+       <!-- <div class="error-icon">⚠️</div>-->
+        <div class="error-title">提示</div>
+        <div style="font-size:14px; color:#666;">认证失败:随机数比对不通过</div>
         <div class="error-btn" onclick="closeErrorPopup()">确定</div>
     </div>
 </div>
