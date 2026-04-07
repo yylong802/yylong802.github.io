@@ -44,6 +44,12 @@
             box-shadow: 0 4px 10px rgba(0,123,255,0.3);
         }
         .nav-b-icon img { width: 28px; height: 28px;  } 
+        /* 强制规定 SVG 的大小，让它们看起来精致一致 */
+        .nav-icon svg {
+            width: 26px;  /* 👈 如果觉得小了可以改成 28px，觉得大了改成 24px */
+            height: 26px;
+            display: block;
+        }
 
         /* ================= 3. Page A 样式 ================= */
         .page-a-content { 
@@ -144,16 +150,70 @@
         #qr-reader-container { position: absolute; top:0; left:0; width: 100%; height: 100%; background: black; z-index: 200; display: none; flex-direction: column; }
         .close-qr { color: white; text-align: center; padding: 20px; background: #333; cursor: pointer; flex-shrink: 0;}
 
+     
+       
         /* ================= 6. Page C 完整样式 ================= */
-        .page-c-content { background: white; flex: 1; display: flex; flex-direction: column; min-height: 0; overflow-y: auto;}
-        .profile-header { display: flex; align-items: center; padding: 30px 20px; border-bottom: 1px solid #eee; flex-shrink: 0;}
+        .page-c-content { 
+            background-color: white; 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 0; 
+            overflow-y: auto;
+            
+            /* 🌟 背景图在这里，因为上面不膨胀了，现在它能完美透出来了 🌟 */
+            background-image: url('./Abk.png');
+            background-size: cover;      
+            background-position: center; 
+            background-repeat: no-repeat;
+        }
+        
+        .profile-header { display: flex; align-items: center; padding: 30px 20px 20px 20px; border-bottom: none; flex-shrink: 0; }
         .avatar { width: 65px; height: 65px; border-radius: 50%; background: var(--primary-blue); color: white; display: flex; justify-content: center; align-items: center; font-size: 28px; margin-right: 15px; }
-        .c-menu { flex: 1; display: flex; flex-direction: column; }
-        .c-menu-item { padding: 16px 20px; border-bottom: 1px solid #eee; font-size: 15px; color: #333; flex-shrink: 0;}
-        .logout-btn { display: block; width: 85%; margin: auto auto 30px auto; padding: 15px; background: var(--primary-blue); color: white; border: none; border-radius: 30px; text-align: center; font-size: 16px; font-weight: bold; flex-shrink: 0;}
+        
+        /* 🌟🌟🌟 静态组合区容器 🌟🌟🌟 */
+        .c-static-decor-wrapper {
+            width: 100%;
+            margin: 0 0 20px 0; /* 👈 核心：15vh 代表严格占用屏幕高度的15%作为留白，非常精准，不会被其他元素挤压 */
+            display: flex;
+            flex-direction: column; 
+            flex-shrink: 0; /* 禁止被压缩 */
+            /* 删掉了这里的 flex 属性，不让它瞎膨胀了 */
+        }
+        
+        /* 🌟 上半部分：完美包裹头像的蓝色块 🌟 */
+        .c-gradient-fill {
+            width: 100%;
+            background: linear-gradient(to bottom right, #316adf 0%, #1754d5 100%);
+            /* 如果你觉得头像距离下面的图片太近，可以改大这个 10px */
+            padding-bottom: 10px; 
+            /* 删掉了这里的 flex 属性 */
+        }
+        
+        /* 🌟 下半部分：紧接着的图片，彻底消灭缝隙 🌟 */
+        .c-decor-static-img {
+            width: 100%;
+            /* 👇 如果你想规定图片高度，改这里，比如 120px；如果想按比例，用 aspect-ratio: 3/1.2; */
+            height: auto; 
+            display: block; /* 👈 这句是消灭图片与上面 header 之间“幽灵小缝隙”的终极杀手 */
+            margin: 0; 
+            padding: 0;
+            object-fit: cover; 
+            background-color: transparent; 
+        }
 
-       /* ================= 7. 独立全屏验证结果页 (PageB3) ================= */
-#pageB3-result {
+        /* 🌟 C 菜单区域 🌟 */
+        .c-menu { display: flex; flex-direction: column; flex-shrink: 0; }
+        .c-menu-item { padding: 16px 20px; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 15px; color: #333; flex-shrink: 0; background: rgba(255,255,255,0.8); }
+        .logout-btn { display: block; width: 85%; margin: 30px auto; padding: 15px; background: var(--primary-blue); color: white; border: none; border-radius: 30px; text-align: center; font-size: 16px; font-weight: bold; flex-shrink: 0;}
+    
+
+
+
+
+
+
+        #pageB3-result {
     position: fixed;
     top: 0; left: 0;
     width: 100vw; height: 100dvh;
@@ -648,6 +708,129 @@
             position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
             background-color: #ffffff; z-index: 5000; display: none; flex-direction: column;
         }
+
+
+
+
+        /* ================= C1 查验记录页样式 ================= */
+        #page-c1-detail {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
+            background-color: #f5f6f8; /* 灰白色大背景 */
+            z-index: 5000; display: none; flex-direction: column;
+        }
+        .log-list-content {
+            flex: 1; overflow-y: auto; padding: 15px;
+        }
+        
+        /* 白色方框容器 */
+        .log-card {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 0 15px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03); /* 极弱的阴影，显得干净 */
+        }
+        
+        /* 上半部分：圆点和型号 */
+        .log-card-top {
+            display: flex;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #eeeeee; /* 灰白色的线分割 */
+        }
+        
+        /* 蓝色圆，中间约30%白点（通过粗边框实现） */
+        .log-blue-dot {
+            width: 18px;
+            height: 18px;
+            background-color: #ffffff;
+            border: 6px solid #1351d3; /* 6px的蓝色边框，内部刚好留下白色核心 */
+            border-radius: 50%;
+            margin-right: 12px;
+            box-sizing: border-box;
+        }
+        
+        .log-model-text {
+            font-size: 18px;
+            color: #333;
+        }
+        
+        /* 下半部分：时间 */
+        .log-card-bottom {
+            padding: 15px 0;
+            color: #333;
+            font-size: 16px;
+        }
+        
+        /* 没有记录时的提示文字 */
+        .empty-log { text-align: center; color: #999; margin-top: 50px; font-size: 14px; }
+
+
+
+        /* ================= 问卷调查页面样式 ================= */
+        #page-survey {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
+            /* 🌟 宽度 100% 铺满屏幕，高度随原图比例自动往下延展，绝不裁切变形！ */
+            background: url('./wenjuan.jpg') no-repeat top center;
+            background-size: 100% auto;
+            background-color: #fcebeb; /* 万一屏幕太长图片不够底，用这个颜色垫底 */
+            z-index: 6000; display: none; flex-direction: column;
+            overflow-y: auto;
+        }
+        
+       
+       /* 顶部背景图区域 */
+        .survey-header-bg {
+            background: transparent; /* 背景变透明，透出大图 */
+            
+            /* 💡 关键数字：这个高度决定了卡片从上往下被推多少距离。
+               你可以修改这个数字（比如 25vh, 35vh, 或者 200px, 280px），
+               直到下方的白色卡片刚好落在图片的留白处！ */
+            height: 28vh; 
+            
+            flex-shrink: 0;
+            position: relative;
+        }
+        
+        /* 白色卡片容器 */
+        .survey-card {
+            background: white;
+            /* 🌟 重点：把之前的负边距改成了 0，让它稳稳地待在透明推手下面 */
+            margin: 0 16.5px 30px 16.5px; 
+            border-radius: 12px;
+            padding: 25px 20px;
+            box-shadow: 0 8px 20px rgba(223, 42, 45, 0.15); 
+            position: relative;
+        }
+        
+        .survey-intro { font-size: 14px; color: #444; line-height: 1.6; margin-bottom: 25px; text-align: justify; }
+        
+        /* 表单每行 */
+        .form-group { display: flex; align-items: center; border-bottom: 1px dashed #f0f0f0; padding: 18px 0; }
+        .form-group label { width: 95px; font-weight: bold; color: #333; display: flex; align-items: center; font-size: 15px; flex-shrink: 0;}
+        
+        /* 红色大圆点 */
+        .red-dot { width: 8px; height: 8px; background-color: #df2a2d; border-radius: 50%; margin-right: 10px; }
+        
+        /* 输入框和下拉菜单规范化 */
+        .form-group input[type="text"], .form-group input[type="tel"], .form-group select {
+            flex: 1; border: none; outline: none; font-size: 14px; color: #333; background: transparent; text-align: right;
+            appearance: none; direction: rtl; /* 让下拉菜单文字靠右 */
+        }
+        .form-group input::placeholder { color: #ccc; }
+        
+        /* 单选框排版 */
+        .radio-group { flex: 1; display: flex; justify-content: flex-end; gap: 30px; }
+        .radio-group label { display: flex; align-items: center; font-weight: normal; font-size: 15px; }
+        .radio-group input[type="radio"] { margin-right: 8px; accent-color: #df2a2d; width: 16px; height: 16px;}
+        
+        /* 提交按钮 */
+        .survey-submit-btn {
+            width: 100%; padding: 15px; background: #df2a2d; color: white; border: none; border-radius: 30px;
+            font-size: 18px; font-weight: bold; margin-top: 40px; cursor: pointer; box-shadow: 0 4px 12px rgba(223, 42, 45, 0.3);
+        }
+
+        
     </style>
 </head>
 <body>
@@ -664,7 +847,9 @@
                     <div class="banner-item"><img src="./h3.jpg"></div>
                 </div>
             </div>
-            <div class="notice-bar"><img src="./Hb2.jpg"></div>
+            <div class="notice-bar" onclick="openSurvey()" style="cursor: pointer;">
+    <img src="./Hb2.jpg">
+</div>
             <div class="oa-grid">
                 <div class="oa-item" onclick="openFic1Detail()" style="cursor: pointer;">
     <img src="./fic1.jpg" class="oa-icon-img"><span>Fic1</span>
@@ -672,7 +857,10 @@
                 <div class="oa-item" onclick="openFic2Detail()" style="cursor: pointer;">
     <img src="./fic2.jpg" class="oa-icon-img"><span>Fic2</span>
 </div>
-                <div class="oa-item"><img src="./fic3.jpg" class="oa-icon-img"><span>Fic3</span></div>
+                <div class="oa-item" onclick="openLogDetail()" style="cursor: pointer;">
+    <img src="./fic3.jpg" class="oa-icon-img"><span>Fic3</span>
+</div>
+
                 <div class="oa-item" onclick="openFic4Detail()" style="cursor: pointer;">
     <img src="./fic4.jpg" class="oa-icon-img"><span>Fic4</span>
 </div>
@@ -765,37 +953,82 @@
         </div>
     </div>
 
-    <!-- ========== Page C ========== -->
-    <div id="pageC" class="page-content">
+<div id="pageC" class="page-content">
         <div class="page-c-content">
-            <div class="profile-header">
-                <div class="avatar">👤</div>
-                <div><h3 style="color:#333;">张三</h3><p style="color:#888; font-size:12px;">ID: 88995566</p></div>
-            </div>
-            <div class="c-menu">
+            
+            <div class="c-static-decor-wrapper">
+                <!-- 🌟 渐变蓝色背景块 🌟 -->
+                <div class="c-gradient-fill">
+                    
+                    <!-- 🌟 把头像区域直接“塞进”蓝色背景块里面 🌟 -->
+                    <div class="profile-header">
+                        <div class="avatar"> <!--C头像--></div>
+                        <!-- 文字颜色改成了白色(#fff)和浅灰色(#eee)，防止在蓝底上看不清 -->
+                        <div><h3 style="color:#fff;">用户昵称</h3><p style="color:#eee; font-size:12px;"><!--C-ID--></p></div>
+                    </div>
+                    
+                </div>
                 
-               <div class="c-menu-item">C1 记录 Log</div>
-                <div class="c-menu-item" onclick="openC2Detail()" style="cursor: pointer;">C2 用户协议</div>
-                <div class="c-menu-item" onclick="openFic4Detail()" style="cursor: pointer;">C3 意见反馈</div>
+                <!-- 紧接着下方的图片 -->
+                <img src="./ctop2.png" class="c-decor-static-img" alt="装饰图片">
+            </div>
+
+            <div class="c-menu">
+                <div class="c-menu-item" onclick="openLogDetail()" style="cursor: pointer;">
+                    <span style="display:inline-block; width:30px;"></span>查验记录
+                </div>
+
+                <div class="c-menu-item" onclick="openC2Detail()" style="cursor: pointer;">
+                    <span style="display:inline-block; width:30px;"></span>用户协议
+                </div>
+
+                <div class="c-menu-item" onclick="openFic4Detail()" style="cursor: pointer;">
+                    <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" fill="currentColor" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 10px; margin-top: -3px;">
+                        <path d="M143.992471 650.511059v181.458823l180.374588-104.448c24.877176 4.065882 81.408 8.463059 107.64047 8.463059 229.737412 0 384-170.977882 384-372.013176S623.284706 0 432.007529 0C201.938824 0 15.992471 162.966588 15.992471 364.001882c0 116.464941 44.423529 215.341176 128 286.509177z m464.022588-330.511059a47.977412 47.977412 0 1 1 0 95.924706 47.977412 47.977412 0 0 1 0-95.924706z m-192.030118 0a48.007529 48.007529 0 1 1 0 95.984941 48.007529 48.007529 0 0 1 0-95.984941z m-192 0a48.007529 48.007529 0 1 1 0.030118 96.045176 48.007529 48.007529 0 0 1-0.030118-96.045176z m176.00753 479.984941h-95.984942c76.197647 74.511059 164.773647 119.988706 288.015059 119.988706 26.202353 0 51.772235-2.349176 76.649412-6.415059L847.992471 1024v-181.519059c97.28-66.620235 160.015059-170.014118 160.015058-286.479059 0-103.815529-49.904941-197.240471-129.596235-263.559529l1.596235 27.557647c0.271059 26.142118 0 23.762824 0 47.977412 0 255.216941-201.065412 432.007529-480.015058 432.007529z"></path>
+                    </svg>售后反馈
+                </div>
+                
                 <button class="logout-btn" onclick="alert('已退出')">退出登录</button>
             </div>
         </div>
     </div>
 
+
+
+
+    
+
     <!-- ========== 底部导航栏 ========== -->
-    <div class="bottom-nav">
+   <div class="bottom-nav">
+        <!-- A 页面 -->
         <div class="nav-item active" onclick="nav('pageA', this)">
-            <span class="nav-icon">🏠</span><span>A</span>
+            <span class="nav-icon">
+                <!-- 删除了 width="200" height="200"，并将 fill 改为 currentColor -->
+                <svg t="1775533633604" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1046">
+                    <path d="M985.6 486.4l-448-448c-12.8-6.4-38.4-6.4-51.2 0l-448 448c-6.4 12.8-12.8 44.8 0 51.2 12.8 6.4 38.4 6.4 51.2 0L512 108.8l422.4 428.8c6.4 6.4 19.2 6.4 25.6 6.4 6.4 0 19.2 0 25.6-12.8 12.8-12.8 12.8-32 0-44.8zM832 620.8c-19.2 0-32 12.8-32 32V896h-576v-236.8c0-19.2-12.8-32-32-32s-32 12.8-32 25.6v275.2c0 19.2 12.8 32 32 32h640c19.2 0 32-12.8 32-25.6v-275.2c0-19.2-12.8-38.4-32-38.4z" p-id="1047" fill="currentColor"></path>
+                    <path d="M704 550.4c0-19.2-6.4-32-25.6-38.4-19.2-6.4-38.4 6.4-38.4 25.6-12.8 57.6-64 102.4-128 102.4s-115.2-38.4-128-102.4c-6.4-19.2-19.2-25.6-38.4-25.6-12.8 0-25.6 19.2-25.6 32C339.2 640 422.4 704 512 704s172.8-64 192-153.6z" p-id="1048" fill="currentColor"></path>
+                </svg>
+            </span>
+            <span>首页</span>
         </div>
+        
+        <!-- B 页面保持不变 -->
         <div class="nav-item nav-b" onclick="nav('pageB', this)">
-            <div class="nav-b-icon"><img src="./bb.png"></div><span>B</span>
+            <div class="nav-b-icon"><img src="./bb.png"></div><span>我的</span>
         </div>
+        
+        <!-- C 页面 -->
         <div class="nav-item" onclick="nav('pageC', this)">
-            <span class="nav-icon">👤</span><span>C</span>
+            <span class="nav-icon">
+                <!-- 删除了 width="200" height="200"，并将 fill 改为 currentColor -->
+                <svg t="1775533702548" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1439">
+                    <path d="M511.943425 600.53946a298.317625 298.317625 0 0 0 212.324303-87.916857 298.261051 298.261051 0 0 0 87.916858-212.324303V0.05714H511.943425A298.3742 298.3742 0 0 0 299.619123 87.973998a298.317625 298.317625 0 0 0-87.916858 212.324302A298.261051 298.261051 0 0 0 299.619123 512.622603a298.317625 298.317625 0 0 0 212.324302 87.916857z m0-529.424679h229.126946v229.126945a229.409818 229.409818 0 0 1-229.126946 229.126945 229.409818 229.409818 0 0 1-229.126945-229.126945 229.409818 229.409818 0 0 1 229.126945-229.126945z" fill="currentColor" p-id="1440"></path>
+                    <path d="M952.659204 755.836612a192.353485 192.353485 0 0 0-48.597542-60.817646 238.461747 238.461747 0 0 0-153.882788-54.028699H273.764552a236.481637 236.481637 0 0 0-167.121234 66.079079A177.021781 177.021781 0 0 0 52.954066 832.495133v22.290375a158.069305 158.069305 0 0 0 59.120409 121.691866 209.325851 209.325851 0 0 0 135.213185 47.522626h529.368105a209.325851 209.325851 0 0 0 135.156611-47.466051 158.069305 158.069305 0 0 0 59.176984-121.748441v-22.290375a169.723663 169.723663 0 0 0-18.330156-76.658521z m-52.784059 98.948896a88.256305 88.256305 0 0 1-33.944733 67.32372 138.38136 138.38136 0 0 1-89.387796 30.776557H247.174511a138.38136 138.38136 0 0 1-89.387796-30.776557 88.19973 88.19973 0 0 1-33.944733-67.267146v-22.346949a105.96414 105.96414 0 0 1 32.926391-75.131008 165.08455 165.08455 0 0 1 116.76988-45.259643h476.414323a137.589316 137.589316 0 0 1 149.696271 120.390651z" fill="currentColor" p-id="1441"></path>
+                </svg>
+            </span>
+            <span>C</span>
         </div>
     </div>
-
-</div>
 
 
         
@@ -1157,6 +1390,98 @@
         <p class="d-text" style="margin-top: 40px; text-align: center; color: #bbb; font-size: 12px;">本协议最终解释权归本公司所有<br>更新日期：2026年4月</p>  -->
     </div>
 </div>
+
+
+<div id="page-c1-detail">
+    <div class="detail-header">
+        <div class="d-back-btn" onclick="closeLogDetail()">&lt; 返回</div>
+        <div class="d-header-title">查验记录</div>
+        <div style="width: 50px;"></div>
+    </div>
+    
+    <div class="log-list-content" id="log-list-container">
+        </div>
+</div>
+
+
+
+<div id="page-survey">
+    <div class="survey-header-bg">
+        <div class="d-back-btn" onclick="closeSurvey()" style="color: white; padding: 15px;">&lt; 返回</div>
+        </div>
+
+    <div class="survey-card">
+        <p class="survey-intro">尊敬的顾客，您好！值此3.15国际消费者权益日来临之际，为了给您提供更优质的产品与服务，我们诚挚邀请您抽出2分钟时间参与本次匿名调研：</p>
+
+        <form id="surveyForm">
+            <div class="form-group">
+                <label><span class="red-dot"></span>姓名</label>
+                <input type="text" id="s_name" placeholder="请输入姓名">
+            </div>
+            
+            <div class="form-group">
+                <label><span class="red-dot"></span>性别</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="s_gender" value="男"> 男</label>
+                    <label><input type="radio" name="s_gender" value="女"> 女</label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label><span class="red-dot"></span>联系方式</label>
+                <input type="tel" id="s_phone" placeholder="请填写您的联系方式" maxlength="11">
+            </div>
+            
+            <div class="form-group">
+                <label><span class="red-dot"></span>年龄</label>
+                <select id="s_age">
+                    <option value="" disabled selected>请选择您的年龄</option>
+                    <option value="18-25">18-25岁</option>
+                    <option value="26-35">26-35岁</option>
+                    <option value="36-50">36-50岁</option>
+                    <option value="50+">50岁以上</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label><span class="red-dot"></span>学历</label>
+                <select id="s_edu">
+                    <option value="" disabled selected>请选择您的学历</option>
+                    <option value="高中及以下">高中及以下</option>
+                    <option value="大专">大专</option>
+                    <option value="本科">本科</option>
+                    <option value="硕士及以上">硕士及以上</option>
+                    <option value="其他">其他</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label><span class="red-dot"></span>所在城市</label>
+                <select id="s_city">
+                    <option value="" disabled selected>请选择您所在的城市</option>
+                    <option value="北京">北京</option>
+                    <option value="上海">上海</option>
+                    <option value="广州">广州</option>
+                    <option value="深圳">深圳</option>
+                    <option value="其他">其他城市</option>
+                </select>
+            </div>
+            
+            <div class="form-group" style="border-bottom: none;">
+                <label><span class="red-dot"></span>您的职业</label>
+                <select id="s_job">
+                    <option value="" disabled selected>请选择您的所属职业</option>
+                    <option value="学生">学生</option>
+                    <option value="上班族">上班族</option>
+                    <option value="自由职业">自由职业</option>
+                    <option value="其他">其他</option>
+                </select>
+            </div>
+
+            <button type="button" class="survey-submit-btn" onclick="submitSurvey()">立即提交</button>
+        </form>
+    </div>
+</div>
         
 
       
@@ -1211,7 +1536,7 @@
     // 匹配校验逻辑
     function checkAndJump(uid) {
         if (uid === TARGET_UID) {
-            showPageB3(); // UID正确 -> 走加载圈进入结果页
+            showPageB3(); addScanLog('FiC4');// UID正确 -> 走加载圈进入结果页
         } else {
             document.getElementById('error-popup').style.display = 'flex'; // UID错误 -> 弹窗
         }
@@ -1389,6 +1714,116 @@
             }, 300);
         }
     });
+
+
+    // ====== 11. C1 查验记录 (Log) 逻辑 ======
+    
+    // 存储历史记录的数组 (预留了一条演示数据)
+    let scanLogData = [
+        { model: "FiC4", time: "2026-04-07 13:19:12" }
+    ];
+
+    // 添加一条新记录的核心函数
+    function addScanLog(modelName) {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = (now.getMonth() + 1).toString().padStart(2, '0');
+        const day = now.getDate().toString().padStart(2, '0');
+        const hh = now.getHours().toString().padStart(2, '0');
+        const mm = now.getMinutes().toString().padStart(2, '0');
+        const ss = now.getSeconds().toString().padStart(2, '0');
+        
+        const timeStr = `${year}-${month}-${day} ${hh}:${mm}:${ss}`;
+        
+        // 将新记录插到数组最前面（最新的在最上）
+        scanLogData.unshift({ model: modelName, time: timeStr });
+    }
+
+    // 渲染记录列表到页面上
+    function renderLogs() {
+        const container = document.getElementById('log-list-container');
+        container.innerHTML = ''; // 清空旧内容
+        
+        if (scanLogData.length === 0) {
+            container.innerHTML = '<div class="empty-log">暂无查验记录</div>';
+            return;
+        }
+        
+        // 遍历数组生成 HTML
+        scanLogData.forEach(log => {
+            const card = document.createElement('div');
+            card.className = 'log-card';
+            card.innerHTML = `
+                <div class="log-card-top">
+                    <div class="log-blue-dot"></div>
+                    <div class="log-model-text">${log.model}</div>
+                </div>
+                <div class="log-card-bottom">
+                    ${log.time}
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+        // 打开记录页
+    function openLogDetail() {
+        renderLogs(); // 打开前先刷新一次数据
+        const page = document.getElementById('page-c1-detail');
+        if(page) page.style.display = 'flex';
+    }
+    
+    // 关闭记录页
+    function closeLogDetail() {
+        const page = document.getElementById('page-c1-detail');
+        if(page) page.style.display = 'none';
+    }
+
+
+    // ====== 12. 问卷调查逻辑与合规验证 ======
+    
+    function openSurvey() {
+        document.getElementById('page-survey').style.display = 'flex';
+    }
+    
+    function closeSurvey() {
+        document.getElementById('page-survey').style.display = 'none';
+    }
+    
+    function submitSurvey() {
+        // 1. 获取所有输入框的值，并去除前后空格
+        const name = document.getElementById('s_name').value.trim();
+        const phone = document.getElementById('s_phone').value.trim();
+        const gender = document.querySelector('input[name="s_gender"]:checked');
+        const age = document.getElementById('s_age').value;
+        const edu = document.getElementById('s_edu').value;
+        const city = document.getElementById('s_city').value;
+        const job = document.getElementById('s_job').value;
+
+        // 2. 判空合规验证
+        if (!name) return alert('合规提示：请输入您的姓名');
+        if (!gender) return alert('合规提示：请选择您的性别');
+        
+        // 3. 手机号严格正则验证 (验证是否为1开头的11位有效号码)
+        const phoneRegex = /^1[3-9]\d{9}$/;
+        if (!phone) return alert('合规提示：请填写联系方式');
+        if (!phoneRegex.test(phone)) {
+            return alert('合规提示：手机号格式错误，请输入真实的11位手机号码');
+        }
+        
+        // 4. 其他必选项验证
+        if (!age) return alert('合规提示：请选择您的年龄');
+        if (!edu) return alert('合规提示：请选择您的学历');
+        if (!city) return alert('合规提示：请选择您所在的城市');
+        if (!job) return alert('合规提示：请选择您的职业');
+
+        // 5. 全部合规，执行提交逻辑
+        alert('提交成功！感谢您抽出宝贵的时间参与调研。');
+        closeSurvey();
+        
+        // 提交后自动清空表单，方便下次测试
+        document.getElementById('surveyForm').reset();
+    }
 </script>
 </body>
 </html>
