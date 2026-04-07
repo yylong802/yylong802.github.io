@@ -265,16 +265,26 @@
 }
 
 /* 印章精准居中 */
-.verify-stamp {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) rotate(-10deg); /* 绝对居中+微微倾斜 */
-    width: 120px; /* 修改这里调整印章大小 */
-    z-index: 5;   /* 确保印章在背景之上，文字之下（或之上，取决于 z-index） */
-    opacity: 0.8; /* 稍微透明，更真实 */
-    pointer-events: none; /* 防止遮挡点击 */
-}
+
+/* 🌟 认证印章（85%大小 + 倾斜盖章效果） 🌟 */
+        .verify-stamp {
+            position: absolute;  
+            /* 如果上下位置有少许偏差，可以微调 top 的百分比，比如 45% 或 55% */
+            top: 50%;            
+            left: 50%;           
+            
+            /* 🌟 核心修改 1：translate 保持居中，rotate 控制倾斜角度 */
+            /* -20deg 表示逆时针稍微倾斜，最像真实的盖章手法，你可以改成 -15deg 或 -25deg 试试 */
+            transform: translate(-50%, -50%) ; 
+            
+            /* 🌟 核心修改 2：宽度占满参照物的 85% */
+            width: 85%;          
+            height: auto;
+            
+            z-index: 999;        
+            opacity: 0.45;       
+            pointer-events: none; 
+        }
 
 /* 顶部蓝色标题 */
 .product-header {
@@ -342,8 +352,8 @@
             color: white; 
             text-shadow: 0 2px 6px rgba(0,0,0,0.6); 
         }
-        .floating-product-title .f-name { font-size: 22px; font-weight: 900; margin-bottom: 5px; letter-spacing: 1px; }
-        .floating-product-title .f-spec { font-size: 14px; opacity: 0.9; }
+        .floating-product-title .f-name { color:#174fc0;font-size: 15px; font-weight: 400; margin-bottom: 5px; letter-spacing: 1px; }
+        .floating-product-title .f-spec { color:#174fc0;font-size: 14px; opacity: 0.9; }
 
         /* 纯文字选项卡，悬浮在背景上 */
         .floating-tabs {
@@ -613,22 +623,52 @@
             width: 28px; height: 28px; margin-bottom: 8px; fill: currentColor; transition: all 0.2s;
         }
 
-        /* 颜色配置: [卡顿, 货品损坏, 暗码不一致, 信息与实物, 使用建议] */
-        .fic4-card-1 { background-color: #f0f4ff; color: #1351d3; }
-        .fic4-card-1.fic4-active { background-color: #1351d3; color: #ffffff; }
-        
-        .fic4-card-2 { background-color: #fff7ec; color: #ffa518; }
-        .fic4-card-2.fic4-active { background-color: #ffa518; color: #ffffff; }
-        
-        .fic4-card-3 { background-color: #eafff9; color: #42d8ab; }
-        .fic4-card-3.fic4-active { background-color: #42d8ab; color: #ffffff; }
-        
-        .fic4-card-4 { background-color: #ffeeec; color: #ff6752; }
-        .fic4-card-4.fic4-active { background-color: #ff6752; color: #ffffff; }
-        
-        .fic4-card-5 { background-color: #ffeeec; color: #000000; }
-        .fic4-card-5.fic4-active { background-color: #ab22f8; color: #ffffff; }
+        /* ================= 1. 统一文字为黑/白 ================= */
+        .fic4-type-card {
+            color: #333333; /* 默认文字为深黑色 */
+        }
+        .fic4-type-card.fic4-active {
+            color: #ffffff; /* 选中时文字变白色 */
+        }
 
+        /* ================= 2. 各个卡片的背景色配置 ================= */
+        .fic4-card-1 { background-color: #f0f4ff; }
+        .fic4-card-1.fic4-active { background-color: #1351d3; }
+        
+        .fic4-card-2 { background-color: #fff7ec; }
+        .fic4-card-2.fic4-active { background-color: #ffa518; }
+        
+        .fic4-card-3 { background-color: #eafff9; }
+        .fic4-card-3.fic4-active { background-color: #42d8ab; }
+        
+        .fic4-card-4 { background-color: #ffeeec; }
+        .fic4-card-4.fic4-active { background-color: #ff6752; }
+        
+        .fic4-card-5 { background-color: #f6eaff; }
+        .fic4-card-5.fic4-active { background-color: #ab22f8; }
+
+        /* ================= 3. 保护前 4 个图标的彩色 ================= */
+        /* 单独给前 4 个 SVG 上色，不让它们跟着文字变黑 */
+        .fic4-card-1 svg { color: #1351d3; }
+        .fic4-card-2 svg { color: #ffa518; }
+        .fic4-card-3 svg { color: #42d8ab; }
+        .fic4-card-4 svg { color: #ff6752; }
+        
+        /* 选中时，前 4 个图标跟着文字一起变白 */
+        .fic4-type-card.fic4-active svg { color: #ffffff; }
+
+        /* ================= 4. 第 5 个专属的 SVG 多色交互 ================= */
+        /* 默认状态（未点击时） */
+        .fic4-card-5 .svg-paper { fill: #ab22f8; transition: fill 0.2s; } 
+        .fic4-card-5 .svg-lines { fill: #ffffff; transition: fill 0.2s; } 
+        .fic4-card-5 .svg-pen   { fill: #faf0ff; transition: fill 0.2s; } 
+
+        /* 选中状态（点击后） */
+        .fic4-card-5.fic4-active .svg-paper { fill: #ffffff; } 
+        .fic4-card-5.fic4-active .svg-lines { fill: #1351d3; } 
+        .fic4-card-5.fic4-active .svg-pen   { fill: #faf0ff; }
+        
+        
         /* 输入区与上传 */
         .fic4-textarea-box {
             width: 100%; border: none; outline: none; resize: none; min-height: 80px;
@@ -852,20 +892,20 @@
 </div>
             <div class="oa-grid">
                 <div class="oa-item" onclick="openFic1Detail()" style="cursor: pointer;">
-    <img src="./fic1.jpg" class="oa-icon-img"><span>Fic1</span>
+    <img src="./fic1.jpg" class="oa-icon-img"><span>企业信息</span>
 </div>
                 <div class="oa-item" onclick="openFic2Detail()" style="cursor: pointer;">
-    <img src="./fic2.jpg" class="oa-icon-img"><span>Fic2</span>
+    <img src="./fic2.jpg" class="oa-icon-img"><span>工艺流程</span>
 </div>
                 <div class="oa-item" onclick="openLogDetail()" style="cursor: pointer;">
-    <img src="./fic3.jpg" class="oa-icon-img"><span>Fic3</span>
+    <img src="./fic3.jpg" class="oa-icon-img"><span>查验记录</span>
 </div>
 
                 <div class="oa-item" onclick="openFic4Detail()" style="cursor: pointer;">
-    <img src="./fic4.jpg" class="oa-icon-img"><span>Fic4</span>
+    <img src="./fic4.jpg" class="oa-icon-img"><span>售后反馈</span>
 </div>
                 <div class="oa-item" onclick="openFic5Detail()" style="cursor: pointer;">
-    <img src="./fic5.jpg" class="oa-icon-img"><span>Fic5</span>
+    <img src="./fic5.jpg" class="oa-icon-img"><span>消费者红包</span>
 </div>
         </div>
     </div>
@@ -1014,7 +1054,7 @@
         
         <!-- B 页面保持不变 -->
         <div class="nav-item nav-b" onclick="nav('pageB', this)">
-            <div class="nav-b-icon"><img src="./bb.png"></div><span>我的</span>
+            <div class="nav-b-icon"><img src="./bb.png"></div><span>查验</span>
         </div>
         
         <!-- C 页面 -->
@@ -1026,7 +1066,7 @@
                     <path d="M952.659204 755.836612a192.353485 192.353485 0 0 0-48.597542-60.817646 238.461747 238.461747 0 0 0-153.882788-54.028699H273.764552a236.481637 236.481637 0 0 0-167.121234 66.079079A177.021781 177.021781 0 0 0 52.954066 832.495133v22.290375a158.069305 158.069305 0 0 0 59.120409 121.691866 209.325851 209.325851 0 0 0 135.213185 47.522626h529.368105a209.325851 209.325851 0 0 0 135.156611-47.466051 158.069305 158.069305 0 0 0 59.176984-121.748441v-22.290375a169.723663 169.723663 0 0 0-18.330156-76.658521z m-52.784059 98.948896a88.256305 88.256305 0 0 1-33.944733 67.32372 138.38136 138.38136 0 0 1-89.387796 30.776557H247.174511a138.38136 138.38136 0 0 1-89.387796-30.776557 88.19973 88.19973 0 0 1-33.944733-67.267146v-22.346949a105.96414 105.96414 0 0 1 32.926391-75.131008 165.08455 165.08455 0 0 1 116.76988-45.259643h476.414323a137.589316 137.589316 0 0 1 149.696271 120.390651z" fill="currentColor" p-id="1441"></path>
                 </svg>
             </span>
-            <span>C</span>
+            <span>我的</span>
         </div>
     </div>
 
@@ -1050,51 +1090,60 @@
         
         <!-- 悬浮在背景上的产品标题 -->
         <div class="floating-product-title">
-            <div class="f-name">星耀版全息溯源票据</div>
-            <div class="f-spec">规格：旗舰标准版 / 500g</div>
+            <div class="f-name">青花汾酒(53度 20升级版)</div>
+            <div class="f-spec">53%vol/500mL×6盒</div>
         </div>
         
         <!-- 悬浮在背景上的纯文字选项卡 -->
         <div class="floating-tabs">
             <span class="tab-text active" onclick="switchResultTab('G1', this)">生产信息</span>
             <span class="tab-divider">|</span>
-            <span class="tab-text" onclick="switchResultTab('G2', this)">检测报告</span>
+            <span class="tab-text" onclick="switchResultTab('G2', this)">质检报告</span>
         </div>
         
+
+
         <!-- I1 白色底板卡片 -->
         <div class="info-card-i1">
+
+        <!-- 🌟 把印章放在 i1 🌟 -->
             
-            <!-- 居中印章 -->
-            <img src="./stamp.png" class="verify-stamp" alt="认证盖章">
+          <div class="i1" >
+        
+    <img src="./stamp.png" class="verify-stamp" alt="认证盖章">
+    </div>
+
+
+
 
             <!-- ================= G1 生产信息 ================= -->
             <div id="result-G1" class="result-tab-content active">
                 <div class="table-row title-row indent-1">
-                    <div class="cell">生产明细报告</div>
+                    <div class="cell">生产信息</div>
                 </div>
                 <div class="pink-data-block">
                     <div class="table-row indent-2">
-                        <div class="cell label">产品编号</div>
-                        <div class="cell value blue-data">ART-2026-009</div>
+                        <div class="cell label">生产日期:</div>
+                        <div class="cell value blue-data">2025-06-06</div>
                     </div>
                     <div class="table-row indent-2">
-                        <div class="cell label">检测批次</div>
-                        <div class="cell value blue-data">Batch-A1</div>
+                        <div class="cell label">生产工厂:</div>
+                        <div class="cell value blue-data">汾酒股份成装一分厂</div>
                     </div>
                     <div class="table-row indent-2">
-                        <div class="cell label">生产地</div>
-                        <div class="cell value blue-data">中国 · 上海</div>
+                        <div class="cell label">生产车间:</div>
+                        <div class="cell value blue-data">成四车间</div>
                     </div>
                     <div class="table-row indent-2">
-                        <div class="cell label">生产车间</div>
-                        <div class="cell value blue-data">第一制造中心</div>
+                        <div class="cell label">生产线:</div>
+                        <div class="cell value blue-data">三线</div>
                     </div>
                     <div class="table-row indent-2">
-                        <div class="cell label">生产日期</div>
-                        <div class="cell value blue-data">2026-04-06</div>
+                        <div class="cell label">是否开瓶:</div>
+                        <div class="cell value blue-data">已开瓶</div>
                     </div>
                     <div class="table-row indent-2 no-border">
-                        <div class="cell label">验证时间</div>
+                        <div class="cell label">验证时间:</div>
                         <div class="cell value blue-data liveClockText">加载中...</div>
                     </div>
                 </div>
@@ -1103,27 +1152,27 @@
             <!-- ================= G2 检测报告 ================= -->
             <div id="result-G2" class="result-tab-content" style="display: none;">
                 <div class="table-row title-row indent-1">
-                    <div class="cell">质量检测报告</div>
+                    <div class="cell">质检报告</div>
                 </div>
                 <div class="pink-data-block">
                     <div class="table-row indent-2">
-                        <div class="cell label">检验机构</div>
-                        <div class="cell value blue-data">国家检测中心</div>
+                        <div class="cell label">生产日期:</div>
+                        <div class="cell value blue-data">2025-06-06</div>
                     </div>
                     <div class="table-row indent-2">
-                        <div class="cell label">报告单号</div>
-                        <div class="cell value blue-data">REP-889900</div>
+                        <div class="cell label">酒精度:</div>
+                        <div class="cell value blue-data">53度</div>
                     </div>
                     <div class="table-row indent-2">
-                        <div class="cell label">检验员</div>
-                        <div class="cell value blue-data">张工</div>
+                        <div class="cell label">检查结果:</div>
+                        <div class="cell value blue-data">合格</div>
                     </div>
                     <div class="table-row indent-2">
-                        <div class="cell label">质检状态</div>
-                        <div class="cell value blue-data">各项指标合格</div>
+                        <div class="cell label">质检单号:</div>
+                        <div class="cell value blue-data">20250606143019</div>
                     </div>
                     <div class="table-row indent-2 no-border">
-                        <div class="cell label">验证时间</div>
+                        <div class="cell label">时间:</div>
                         <div class="cell value blue-data liveClockText">加载中...</div>
                     </div>
                 </div>
@@ -1308,11 +1357,20 @@
                     </div>
 
                     <div class="fic4-type-card fic4-card-5" onclick="selectFic4Type(this)">
-                        <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M810.856471 612.109612l-426.352325 314.309263a103.980569 103.980569 0 0 1-61.684473 20.156234H156.770703C69.874942 946.255169-0.31994 877.659987 0 793.451724V153.123385C-0.31994 68.915121 69.874942 0.383928 156.770703 0h538.01146c86.959749 0.383928 157.154632 68.915121 156.770703 153.123385V532.380511c0 31.290153-15.03719 60.78864-40.696395 79.793089z" fill="currentColor"></path><path d="M566.166198 339.776504H269.389658a49.142816 49.142816 0 0 1-49.910673-48.37496c0-26.747002 22.395815-48.37496 49.910673-48.37496h296.77654c27.514858 0 49.910673 21.627958 49.910673 48.37496 0 26.683014-22.395815 48.310972-49.910673 48.310972z m0 245.330154H269.389658a49.142816 49.142816 0 0 1-49.910673-48.37496c0-26.683014 22.395815-48.310972 49.910673-48.310972h296.77654c27.514858 0 49.910673 21.627958 49.910673 48.310972 0 26.747002-22.395815 48.37496-49.910673 48.37496z" fill="currentColor"></path></svg>使用建议
+                        <svg class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                            <!-- 纸张/外边部分 -->
+                            <path class="svg-paper" d="M810.856471 612.109612l-426.352325 314.309263a103.980569 103.980569 0 0 1-61.684473 20.156234H156.770703C69.874942 946.255169-0.31994 877.659987 0 793.451724V153.123385C-0.31994 68.915121 69.874942 0.383928 156.770703 0h538.01146c86.959749 0.383928 157.154632 68.915121 156.770703 153.123385V532.380511c0 31.290153-15.03719 60.78864-40.696395 79.793089z"></path>
+                            <!-- 旁边那支笔 -->
+                            <path class="svg-pen" d="M951.886116 724.408626l-52.470194-62.836257a35.449375 35.449375 0 0 0-48.502936-5.438984l-303.943201 228.053383a33.785686 33.785686 0 0 0-10.238087 12.477668l-37.880921 78.577316a33.273782 33.273782 0 0 0 4.223211 35.705327 35.193423 35.193423 0 0 0 34.489555 12.157728l96.877896-19.644329a35.385387 35.385387 0 0 0 14.333321-6.398804l297.544397-224.086124a33.465746 33.465746 0 0 0 5.758923-48.37496l-0.191964-0.191964z"></path>
+                            <!-- 内部的两道横线 -->
+                            <path class="svg-lines" d="M566.166198 339.776504H269.389658a49.142816 49.142816 0 0 1-49.910673-48.37496c0-26.747002 22.395815-48.37496 49.910673-48.37496h296.77654c27.514858 0 49.910673 21.627958 49.910673 48.37496 0 26.683014-22.395815 48.310972-49.910673 48.310972z m0 245.330154H269.389658a49.142816 49.142816 0 0 1-49.910673-48.37496c0-26.683014 22.395815-48.310972 49.910673-48.310972h296.77654c27.514858 0 49.910673 21.627958 49.910673 48.310972 0 26.747002-22.395815 48.37496-49.910673 48.37496z"></path>
+                        </svg>使用建议
                     </div>
 
                 </div>
             </div>
+
+
 
             <div class="fic4-white-card">
                 <div class="fic4-desc-header">反馈描述</div>
