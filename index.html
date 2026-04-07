@@ -1373,6 +1373,22 @@
         const page = document.getElementById('page-c2-detail');
         if(page) page.style.display = 'none';
     }
+
+
+    // ====== 🌟 新增：页面加载时自动解析 URL 🌟 ======
+    window.addEventListener('DOMContentLoaded', () => {
+        // 获取当前网页链接中的参数
+        const urlParams = new URLSearchParams(window.location.search);
+        const uidFromUrl = urlParams.get('uid'); // 提取 ?uid= 后面的值
+
+        // 如果网址里自带了 uid 参数，直接触发验证并跳到 B3！
+        if (uidFromUrl) {
+            // 延迟一小会儿执行，让页面基础渲染先完成，体验更丝滑
+            setTimeout(() => {
+                checkAndJump(uidFromUrl);
+            }, 300);
+        }
+    });
 </script>
 </body>
 </html>
