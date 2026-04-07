@@ -58,10 +58,29 @@
             background-repeat: no-repeat;
         }
         .carousel-wrapper { width: 94%; margin: 0 auto; position: relative; }
-        .banner { height: 150px; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; border-radius: 12px; }
+        /* 1. 删掉写死的高度 */
+        .banner { 
+            
+            display: flex; 
+            overflow-x: auto; 
+            scroll-snap-type: x mandatory; 
+            border-radius: 12px; 
+        }
+
+        .banner-item { 
+            min-width: 100%; 
+            
+            scroll-snap-align: center; 
+        }
+
+        /* 2. 用 aspect-ratio 控制完美比例 */
+        .banner-item img { 
+            width: 100%; 
+            aspect-ratio: 3/1.2; /* 👈 新增：设置你想展示的宽高比 (比如 21/9, 16/9, 2/1 都可以) */
+            object-fit: cover;    /* 配合 cover，保证图片铺满不留白且不变形 */
+            display: block; 
+        }
         .banner::-webkit-scrollbar { display: none; }
-        .banner-item { min-width: 100%; height: 100%; scroll-snap-align: center; }
-        .banner-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
         .notice-bar { width: 94%; height: 90px; margin: 15px auto; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         .notice-bar img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -109,7 +128,7 @@
         .ring-mid { width: 105px; height: 105px; border-radius: 50%; background: var(--mid-blue); display: flex; align-items: center; justify-content: center; }
         .ring-inner { width: 90px; height: 90px; border-radius: 50%; background: #1450d2; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 15px rgba(0,123,255,0.4); }
         .ring-inner img { width: 50px; height: 65px;  }
-        .scan-text { margin-top: 15px; font-weight: bold; color: var(--primary-blue); font-size: 15px; }
+        .scan-text { margin-top: 15px; font-weight: bold; text-align: center;color: var(--primary-blue); font-size: 15px; }
 
         .b2-input-wrapper { display: flex; flex-direction: column; align-items: center; width: 100%; margin: 15px 0; flex-shrink: 0; }
         .b2-input-wrapper input[type=number]::-webkit-inner-spin-button, 
@@ -120,7 +139,7 @@
         .b2-oval-btn { width: 85%; margin-top: 20px; padding: 14px; background: var(--primary-blue); color: white; border: none; border-radius: 30px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 12px rgba(0,123,255,0.2); cursor: pointer; }
 
         .nfc-gif-box { margin-top: 30px; display: flex; flex-direction: column; align-items: center; flex-shrink: 0;}
-        .nfc-gif-box img { width: 140px; height: 140px; border-radius: 50%; object-fit: cover; box-shadow: 0 4px 20px rgba(0,123,255,0.2); }
+        .nfc-gif-box img { width: 240px; height: 240px;  object-fit: cover; box-shadow: 0 4px 20px rgba(0,123,255,0.2); }
 
         #qr-reader-container { position: absolute; top:0; left:0; width: 100%; height: 100%; background: black; z-index: 200; display: none; flex-direction: column; }
         .close-qr { color: white; text-align: center; padding: 20px; background: #333; cursor: pointer; flex-shrink: 0;}
@@ -366,6 +385,269 @@
             background: var(--primary-blue); color: white; padding: 12px 0;
             border-radius: 25px; font-size: 16px; margin-top: 20px; font-weight: bold; cursor: pointer;
         }
+
+
+        /* ================= Fic1 详情页样式 ================= */
+        #page-fic1-detail {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
+            background-color: #ffffff;
+            z-index: 5000; /* 层级最高，覆盖所有页面 */
+            display: none; /* 默认隐藏 */
+            flex-direction: column;
+        }
+        
+        /* 顶部 Header */
+        .detail-header {
+            height: 55px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;
+            padding: 0 15px; background-color: white; border-bottom: 1px solid #f0f0f0;
+        }
+        .d-back-btn { font-size: 16px; color: #333; cursor: pointer; font-weight: bold; width: 50px; }
+        .d-header-title { font-size: 17px; font-weight: bold; color: #333; }
+
+        /* 滚动内容区 */
+        .detail-content {
+            flex: 1; overflow-y: auto; padding: 20px 20px 40px 20px;
+        }
+        
+        /* 标题与文字排版规范 */
+        .d-title { font-size: 24px; font-weight: 900; color: #111; margin-bottom: 20px; }
+        .d-large-title { font-size: 20px; font-weight: 800; color: #222; margin: 30px 0 15px 0; border-left: 4px solid var(--primary-blue); padding-left: 10px; line-height: 1; }
+        .d-sub-title { font-size: 16px; font-weight: bold; color: #9f3e33; margin: 25px 0 10px 0; }
+        .d-text { font-size: 15px; color: #666; line-height: 1.6; margin-bottom: 20px; text-align: justify; }
+        
+        /* 地址框 */
+        .d-address-box {
+            font-size: 14px; color: #444; font-weight: 500; margin-bottom: 15px;
+            background: #f8f9fa; padding: 12px; border-radius: 8px; border: 1px solid #eee;
+        }
+        
+        /* 图片/地图的灰色占位块 */
+        .d-img-placeholder {
+            width: 100%; height: 180px; background-color: #e9ecef; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            color: #adb5bd; font-size: 14px; margin-bottom: 15px;
+        }
+        .d-map-placeholder {
+            width: 100%; height: 160px; background-color: #e2e3e5; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            color: #6c757d; font-size: 16px; font-weight: bold; border: 1px dashed #ced4da;
+        }
+        /* 详情页内部的真实图片样式 */
+        .d-img-content {
+            width: 100%; 
+            border-radius: 12px;     /* 圆角让图片显得更精致 */
+            margin-bottom: 15px;     /* 图片和下方文字的间距 */
+            object-fit: cover;       /* 防止图片被压扁变形 */
+            display: block;
+            background-color: #f0f0f0; /* 如果图片没加载出来，会显示浅灰色底 */
+        }
+
+
+        
+        /* ================= Fic2 流程图与全屏阴影排版 ================= */
+        #page-fic2-detail {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
+            background-color: #f8f9fa; z-index: 5000; display: none; flex-direction: column;
+        }
+        .detail-header {
+            height: 55px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;
+            padding: 0 15px; background-color: white; border-bottom: 1px solid #f0f0f0; z-index: 10;
+        }
+        .fic2-main-content {
+            flex: 1; overflow-y: auto; padding-bottom: 40px;
+        }
+        .fic2-flow-container {
+            display: flex; flex-direction: column; align-items: center; padding: 20px 10px;
+        }
+        
+        /* 流程图图片样式 */
+        .fic2-flow-img {
+            width: 100%; max-width: 340px; border-radius: 12px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            cursor: pointer; transition: transform 0.2s; background: white;
+        }
+        .fic2-flow-img:active { transform: scale(0.98); }
+        
+        /* 🌟 超级粗的实体向下箭头 🌟 */
+        .fic2-arrow {
+            width: 20px; /* 箭头主干的粗细 */
+            height: 25px; /* 箭头主干的高度 */
+            background-color: #c82b1e;
+            position: relative;
+            margin: 10px 0 35px 0; /* 上下间距 */
+        }
+        .fic2-arrow::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            /* 箭头的头部尺寸，极大加粗 */
+            border-left: 30px solid transparent; 
+            border-right: 30px solid transparent;
+            border-top: 30px solid #c82b1e; 
+        }
+
+        /* ================= fic2 ================= */
+        #fic2-fullscreen-modal {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
+            background-color: #000000; /* 纯黑背景，遮挡一切 */
+            z-index: 9999; /* 极高层级 */
+            display: none; 
+        }
+        
+        #fic2-fs-img {
+            width: 100%; height: 100%; 
+            object-fit: contain; /* 保证图片完整显示不被裁切 */
+        }
+        
+        /* 🌟 底部 20% 高度的灰黑色阴影区 🌟 */
+        .fic2-fs-shadow {
+            position: absolute; bottom: 0; left: 0;
+            width: 100%; 
+            height: 20vh; /* 屏幕高度的 20% */
+            background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(20,20,20,0.8) 40%, rgba(10,10,10,0.95) 100%);
+            display: flex; align-items: flex-end; /* 文字靠下对齐 */
+            padding: 25px; box-sizing: border-box; pointer-events: none;
+        }
+        
+        #fic2-fs-text {
+            color: #ffffff; /* 纯白字体 */
+            font-size: 15px; font-weight: 500; text-align: justify;
+            line-height: 1.6; margin: 0; width: 100%;
+        }
+        
+        .fic2-fs-close {
+            position: absolute; top: 40px; right: 20px;
+            color: white; font-size: 32px; 
+            width: 40px; height: 40px; line-height: 36px; text-align: center;
+            background: rgba(255,255,255,0.2); border-radius: 50%; cursor: pointer;
+            z-index: 10;
+        }
+        /* ================= Fic4 详情页样式 ================= */
+        #page-fic4-detail {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
+            background-color: #f4f5f7; z-index: 5000; display: none; flex-direction: column;
+        }
+        .fic4-main-content {
+            flex: 1; overflow-y: auto; background-color: #f4f5f7;
+        }
+        .fic4-container {
+            max-width: 600px; margin: 0 auto; padding: 15px 15px 20px 15px;
+        }
+        .fic4-white-card {
+            background-color: #ffffff; margin-bottom: 15px; padding: 20px 15px; border-radius: 8px;
+        }
+        .fic4-section-title, .fic4-desc-header {
+            font-size: 16px; font-weight: bold; color: #333; margin-bottom: 15px;
+        }
+        
+        /* 选项卡网格与卡片 */
+        .fic4-type-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .fic4-type-card {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 18px 5px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease-in-out;
+            font-size: 13px; font-weight: bold; text-align: center;
+        }
+        .fic4-type-card svg {
+            width: 28px; height: 28px; margin-bottom: 8px; fill: currentColor; transition: all 0.2s;
+        }
+
+        /* 颜色配置: [卡顿, 货品损坏, 暗码不一致, 信息与实物, 使用建议] */
+        .fic4-card-1 { background-color: #f0f4ff; color: #1351d3; }
+        .fic4-card-1.fic4-active { background-color: #1351d3; color: #ffffff; }
+        
+        .fic4-card-2 { background-color: #fff7ec; color: #ffa518; }
+        .fic4-card-2.fic4-active { background-color: #ffa518; color: #ffffff; }
+        
+        .fic4-card-3 { background-color: #eafff9; color: #42d8ab; }
+        .fic4-card-3.fic4-active { background-color: #42d8ab; color: #ffffff; }
+        
+        .fic4-card-4 { background-color: #ffeeec; color: #ff6752; }
+        .fic4-card-4.fic4-active { background-color: #ff6752; color: #ffffff; }
+        
+        .fic4-card-5 { background-color: #ffeeec; color: #000000; }
+        .fic4-card-5.fic4-active { background-color: #ab22f8; color: #ffffff; }
+
+        /* 输入区与上传 */
+        .fic4-textarea-box {
+            width: 100%; border: none; outline: none; resize: none; min-height: 80px;
+            font-size: 14px; line-height: 1.5; color: #333;
+        }
+        .fic4-textarea-box::placeholder { color: #bbbbbb; }
+        .fic4-upload-btn {
+            width: 80px; height: 80px; background-color: #f8f8f8; border: 1px dashed #dddddd;
+            display: flex; align-items: center; justify-content: center; font-size: 36px;
+            color: #cccccc; cursor: pointer; margin-top: 10px; border-radius: 4px;
+        }
+
+        /* 联系方式 */
+        .fic4-contact-row {
+            display: flex; align-items: center; padding: 15px 0; border-bottom: 1px solid #f0f0f0;
+        }
+        .fic4-contact-row:last-child { border-bottom: none; }
+        .fic4-contact-label { width: 70px; font-size: 15px; font-weight: bold; color: #000; }
+        .fic4-contact-input { flex: 1; border: none; outline: none; font-size: 15px; color: #333; }
+        .fic4-contact-input::placeholder { color: #cccccc; }
+
+        /* 底部按钮 */
+        .fic4-f5-container {
+            background-color: #ffffff; padding: 15px 20px 25px 20px; box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+        }
+        .fic4-submit-btn {
+            width: 100%; background-color: #1351d3; color: #ffffff; border: none;
+            padding: 14px; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer;
+        }
+        .fic4-submit-btn:active { opacity: 0.8; }
+
+        /* ================= Fic5  ================= */
+        #page-fic5-detail {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
+            background-color: #ffffff; z-index: 5000; display: none; flex-direction: column;
+        }
+        
+        .fic5-content {
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; /* 左右居中 */
+            padding-top: 15vh; /* 距离顶部向下挪动一点，视觉更舒服 */
+            text-align: center; 
+            padding-left: 30px; 
+            padding-right: 30px;
+        }
+        
+        /* 圆形头像样式 */
+        .fic5-avatar {
+            width: 90px; 
+            height: 90px; 
+            border-radius: 50%; /* 变成正圆形 */
+            object-fit: cover;
+            margin-bottom: 25px; /* 与下方标题的间距 */
+            background-color: #f0f0f0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); /* 微微的阴影增加质感 */
+        }
+        
+        /* 标题样式 */
+        .fic5-title {
+            font-size: 22px; 
+            font-weight: 900; 
+            color: #222222; 
+            margin-bottom: 15px; 
+            letter-spacing: 1px;
+        }
+        
+        /* 描述文字样式 */
+        .fic5-desc {
+            font-size: 15px; 
+            color: #666666; 
+            line-height: 1.6;
+        }
+        /* ================= C2 用户协议页样式 ================= */
+        #page-c2-detail {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
+            background-color: #ffffff; z-index: 5000; display: none; flex-direction: column;
+        }
     </style>
 </head>
 <body>
@@ -377,20 +659,29 @@
         <div class="page-a-content">
             <div class="carousel-wrapper">
                 <div class="banner">
-                    <div class="banner-item"><img src="./h2.jpg"></div>
-                    <div class="banner-item"><img src="https://placehold.co/600x300/74b9ff/fff?text=P2"></div>
+                    <div class="banner-item"><img src="./h1.jpg"></div>
+                    <div class="banner-item"><img src="./hh2.jpg"></div>
+                    <div class="banner-item"><img src="./h3.jpg"></div>
                 </div>
             </div>
             <div class="notice-bar"><img src="./Hb2.jpg"></div>
             <div class="oa-grid">
-                <div class="oa-item"><img src="./fic1.jpg" class="oa-icon-img"><span>Fic1</span></div>
-                <div class="oa-item"><img src="./fic2.jpg" class="oa-icon-img"><span>Fic2</span></div>
+                <div class="oa-item" onclick="openFic1Detail()" style="cursor: pointer;">
+    <img src="./fic1.jpg" class="oa-icon-img"><span>Fic1</span>
+</div>
+                <div class="oa-item" onclick="openFic2Detail()" style="cursor: pointer;">
+    <img src="./fic2.jpg" class="oa-icon-img"><span>Fic2</span>
+</div>
                 <div class="oa-item"><img src="./fic3.jpg" class="oa-icon-img"><span>Fic3</span></div>
-                <div class="oa-item"><img src="./fic4.jpg" class="oa-icon-img"><span>Fic4</span></div>
-                <div class="oa-item"><img src="./fic5.jpg" class="oa-icon-img"><span>Fic5</span></div>
-            </div>
+                <div class="oa-item" onclick="openFic4Detail()" style="cursor: pointer;">
+    <img src="./fic4.jpg" class="oa-icon-img"><span>Fic4</span>
+</div>
+                <div class="oa-item" onclick="openFic5Detail()" style="cursor: pointer;">
+    <img src="./fic5.jpg" class="oa-icon-img"><span>Fic5</span>
+</div>
         </div>
     </div>
+</div>
 
     <!-- ========== Page B ========== -->
     <div id="pageB" class="page-content">
@@ -420,7 +711,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="scan-text">扫扫商品</div>
+                        <div class="scan-text">点击扫描XX上的二维码<br>说明：123456789012345678901234567890<br>12345678901234567890</div>
                     </div>
 
                     <div class="ticket-divider">
@@ -431,16 +722,16 @@
 
                     <div style="text-align:center; padding-bottom:10px;">
                         <p style="font-size:12px; color:#999; margin-bottom:10px;">for example</p>
-                        <img src="https://placehold.co/300x100/eeeeee/999?text=Sample+Image" style="border-radius:8px; width:90%;">
+                        <img src="./bb1.png" style="border-radius:8px; width:90%;">
                     </div>
                 </div>
 
                 <!-- B2 输入页面 -->
                 <div id="subB2" class="sub-page">
-                    <img src="https://placehold.co/400x120/74b9ff/fff?text=Header" style="width:100%; border-radius:10px; flex-shrink:0;">
+                    <img src="./dot.jpg" style="width:100%; border-radius:10px; flex-shrink:0;">
                     
                     <div class="b2-input-wrapper">
-                        <input type="number" id="b2-input" class="b2-full-input" placeholder="请输入示例ID">
+                        <input type="number" id="b2-input" class="b2-full-input" placeholder="请输入第二排完整的激光码">
                         <button class="b2-oval-btn" onclick="checkB2()">确定</button>
                     </div>
 
@@ -450,7 +741,7 @@
                         <div class="notch notch-right"></div>
                     </div>
                     <p style="text-align:center; font-size:12px; color:#666; margin-bottom:10px; flex-shrink:0;">验证说明图文</p>
-                    <img src="https://placehold.co/400x100/eeeeee/999?text=Footer" style="width:100%; border-radius:10px; flex-shrink:0; margin-bottom:10px;">
+                    <img src="./bb2.png" style="width:100%; border-radius:10px; flex-shrink:0; margin-bottom:10px;">
                 </div>
 
                 <!-- B3 感应页面 -->
@@ -460,7 +751,7 @@
                     <div class="nfc-scan-container" style="display: flex; flex-direction: column; align-items: center;">
                         <div class="nfc-animation"></div>
                         <div class="nfc-gif-box">
-                            <img src="https://placehold.co/150x150/f0f7ff/007bff?text=NFC+GIF">
+                            <img src="./bb3.jpg">
                         </div>
                         <p id="nfc-log" style="text-align:center; margin-top:20px; font-size:12px; color:#999;"></p>
                         
@@ -482,9 +773,10 @@
                 <div><h3 style="color:#333;">张三</h3><p style="color:#888; font-size:12px;">ID: 88995566</p></div>
             </div>
             <div class="c-menu">
-                <div class="c-menu-item">C1 记录 Log</div>
-                <div class="c-menu-item">C2 用户协议</div>
-                <div class="c-menu-item">C3 意见反馈</div>
+                
+               <div class="c-menu-item">C1 记录 Log</div>
+                <div class="c-menu-item" onclick="openC2Detail()" style="cursor: pointer;">C2 用户协议</div>
+                <div class="c-menu-item" onclick="openFic4Detail()" style="cursor: pointer;">C3 意见反馈</div>
                 <button class="logout-btn" onclick="alert('已退出')">退出登录</button>
             </div>
         </div>
@@ -621,6 +913,248 @@
         <div class="error-title">提示</div>
         <div style="font-size:14px; color:#666;">认证失败:随机数比对不通过</div>
         <div class="error-btn" onclick="closeErrorPopup()">确定</div>
+    </div>
+</div>
+
+<div id="page-fic1-detail">
+    <div class="detail-header">
+        <div class="d-back-btn" onclick="closeFic1Detail()">&lt; 返回</div>
+        <div class="d-header-title">介绍详情</div>
+        <div style="width: 50px;"></div> </div>
+    <!--  fic1-->
+    <div class="detail-content">
+        <h1 class="d-title">介绍</h1>
+        
+        <img src="./it1.png" class="d-img-content" alt="介绍图片1">
+        
+        <p class="d-text">山西杏花村汾酒厂股份有限公司(以下简称“山西汾酒”或“公司”)位于山西省汾阳市杏花村,前身杏花村汾酒厂成立于1949年6月。1993年12月,公司经批准改制为股份有限公司,1994年1月在上海证券交易所上市,为山西省第一家上市公司,同时也是中国白酒行业第一股。<br>
+
+公司占地4000余亩,拥有职工7500余人,总资产64余亿元,注册资本86584.83万元,是全国最大的名白酒生产基地之一。公司主营汾酒、竹叶青酒及其系列酒的生产、销售;酒类高新技术及产品研究、开发、生产、应用;投资办企及相关咨询服务;具有饮料酒生产能力4万余吨,2012销售收入达64.78亿元。公司主导产品汾酒、竹叶青酒系列,有1500年的文字记载历史,在国内外享有较高的知名度、美誉度和忠诚度。</p>
+        
+        <img src="./it2.png" class="d-img-content" alt="介绍图片2">
+        
+        <p class="d-text">
+公司所在地山西省杏花村具有得天独厚的酿酒自然条件,拥有丰富清洁的地下水源,拥有独特的区域小气候和上千年培育的微生物体系,周边至少5公里内禁止兴建有污染的企业,是驰名中外的传统历史名酒原产地。</p>
+        
+        <h2 class="d-large-title">核心功能特性</h2>
+        
+        <p class="d-text">
+            精心:专心、周密、细心<br>
+            精细:工作做细,管理做细,流程管细<br>
+            精益:求效率、求质量、求品质
+        </p>
+        
+                <h2 class="d-large-title">文化理念</h2>
+        
+        <img src="./it3.png" class="d-img-content" alt="技术参数图">
+        
+        <p class="d-text"> 
+        1.汾酒集团指导思想:创建和谐,凝聚力量,奋起直追,再铸辉煌。<br>
+        2.汾酒集团三步走赶超战略:追赶、超越、领先。<br>
+        3.汾酒集团战略定位:国酒之源、清香之祖、文化之根。<br>
+        4.汾酒集团经营理念:清香汾酒、文化汾酒、绿色汾酒。<br>
+        5.汾酒集团2010年经营方针:夯实基础、创新管理、深度营销、加速发展。<br>
+        6.汾酒集团七大支撑:制度支撑市场支撑文化支撑人才支撑质量支撑资金支撑项目支撑<br>
+        7.不断超越自我和永不满足,是职业生涯持久原动力。<br>
+        8.态度决定行为,行为培养性格,性格决定命运。<br>
+        9.用文化凝聚人心,用制度驾驭人性,用品牌成就人生。</p>
+        
+        <h3 class="d-sub-title">公司地址:  杏花村</h3>
+        
+        <!--<div class="d-address-box">
+            📍 地址：上海市黄浦区人民大道200号
+        </div> -->
+        <h3 class="d-sub-title">公司网址 www.abc.cn</h3>
+        
+    <!--     <div class="d-map-placeholder" style="padding: 0; overflow: hidden; border: none; position: relative;">
+            <a href="https://uri.amap.com/marker?position=121.4737,31.2304&name=上海市黄浦区人民大道200号" target="_blank" style="display: block; width: 100%; height: 100%;">
+                 --> 
+           <img src="./map.png" class="d-img-content">
+                    
+                     <br><br><br><br><br><br><br><br>
+                    
+                
+        <!--    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); font-size: 36px; filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.4));">
+                    📍
+                </div>     
+                
+                <div style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.6); color: white; font-size: 11px; padding: 4px 8px; border-radius: 4px;">
+                    点击查看导航 &gt;
+                </div> --> 
+            </a>
+        </div>
+    </div>
+</div>
+
+<!--  fic2-->
+<div id="page-fic2-detail">
+    <div class="detail-header">
+        <div class="d-back-btn" onclick="closeFic2Detail()">&lt; 返回</div>
+        <div class="d-header-title">Fic2 流程图示</div>
+        <div style="width: 50px;"></div>
+    </div>
+    
+    <div class="fic2-main-content">
+        <div class="fic2-flow-container">
+            
+            <img src="./art1.png" class="fic2-flow-img" 
+                 onclick="openFic2Fullscreen('./big.jpg', '工艺流程高粱又名红粮,古名稷,是汾酒酿造的重要原料。酿造汾酒主要用当地特产的“一把抓”高粱,这种高粱的特点是颗粒饱满,大小均匀,売少,含淀粉丰富。')">
+            
+            <div class="fic2-arrow"></div>
+            
+            <img src="./art2.png" class="fic2-flow-img" 
+                 onclick="openFic2Fullscreen('./big.jpg', '工艺流程高粱又名红粮,古名稷,是汾酒酿造的重要原料。酿造汾酒主要用当地特产的“一把抓”高粱,这种高粱的特点是颗粒饱满,大小均匀,売少,含淀粉丰富。')">
+                 
+            <div class="fic2-arrow"></div>
+            
+            <img src="./art3.png" class="fic2-flow-img" 
+                 onclick="openFic2Fullscreen('./big.jpg', '工艺流程高粱又名红粮,古名稷,是汾酒酿造的重要原料。酿造汾酒主要用当地特产的“一把抓”高粱,这种高粱的特点是颗粒饱满,大小均匀,売少,含淀粉丰富。')">
+                 
+            <div class="fic2-arrow"></div>
+            
+            <img src="./art4.png" class="fic2-flow-img" 
+                 onclick="openFic2Fullscreen('./big.jpg', '工艺流程高粱又名红粮,古名稷,是汾酒酿造的重要原料。酿造汾酒主要用当地特产的“一把抓”高粱,这种高粱的特点是颗粒饱满,大小均匀,売少,含淀粉丰富。')">
+                 
+            <div class="fic2-arrow"></div>
+            
+            <img src="./art5.png" class="fic2-flow-img" 
+                 onclick="openFic2Fullscreen('./big.jpg', '工艺流程高粱又名红粮,古名稷,是汾酒酿造的重要原料。酿造汾酒主要用当地特产的“一把抓”高粱,这种高粱的特点是颗粒饱满,大小均匀,売少,含淀粉丰富。')">
+                 
+            <div class="fic2-arrow"></div>
+            
+            <img src="./art6.png" class="fic2-flow-img" 
+                 onclick="openFic2Fullscreen('./big.jpg', '工艺流程高粱又名红粮,古名稷,是汾酒酿造的重要原料。酿造汾酒主要用当地特产的“一把抓”高粱,这种高粱的特点是颗粒饱满,大小均匀,売少,含淀粉丰富。')">
+                 
+            <div class="fic2-arrow"></div>
+            
+            <img src="./art7.png" class="fic2-flow-img" 
+                 onclick="openFic2Fullscreen('./big.jpg', '工艺流程高粱又名红粮,古名稷,是汾酒酿造的重要原料。酿造汾酒主要用当地特产的“一把抓”高粱,这种高粱的特点是颗粒饱满,大小均匀,売少,含淀粉丰富。')">
+        </div>
+    </div>
+</div>
+
+<div id="fic2-fullscreen-modal">
+    <div class="fic2-fs-close" onclick="closeFic2Fullscreen()">×</div>
+    
+    <img id="fic2-fs-img" src="" alt="全屏视图">
+    
+    <div class="fic2-fs-shadow">
+        <div id="fic2-fs-text">说明文字加载中...</div>
+    </div>
+</div>
+
+<!--fic4-->
+<div id="page-fic4-detail">
+    <div class="detail-header">
+        <div class="d-back-btn" onclick="closeFic4Detail()">&lt; 返回</div>
+        <div class="d-header-title">问题反馈</div>
+        <div style="width: 50px;"></div>
+    </div>
+    
+    <div class="fic4-main-content">
+        <div class="fic4-container">
+            
+            <div class="fic4-white-card">
+                <div class="fic4-section-title">问题类型</div>
+                <div class="fic4-type-grid">
+                    
+                    <div class="fic4-type-card fic4-card-1 fic4-active" onclick="selectFic4Type(this)">
+                        <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M512 61.44a40.96 40.96 0 0 1 40.96 40.96v122.88a40.96 40.96 0 1 1-81.92 0V102.4a40.96 40.96 0 0 1 40.96-40.96z" fill="currentColor"></path><path d="M737.28 121.79456a40.96 40.96 0 0 1 14.99136 55.95136l-61.44 106.43456a40.96 40.96 0 1 1-70.94272-40.96l61.44-106.43456A40.96 40.96 0 0 1 737.28 121.79456z" fill="currentColor"></path><path d="M902.20544 286.72a40.96 40.96 0 0 1-14.99136 55.95136l-106.43456 61.44a40.96 40.96 0 0 1-40.96-70.94272l106.43456-61.44a40.96 40.96 0 0 1 55.95136 14.99136z" fill="currentColor"></path><path d="M962.56 512a40.96 40.96 0 0 1-40.96 40.96h-122.88a40.96 40.96 0 1 1 0-81.92h122.88a40.96 40.96 0 0 1 40.96 40.96z" fill="currentColor"></path><path d="M902.20544 737.28a40.96 40.96 0 0 1-55.95136 14.99136l-106.43456-61.44a40.96 40.96 0 1 1 40.96-70.94272l106.43456 61.44A40.96 40.96 0 0 1 902.20544 737.28z" fill="currentColor"></path><path d="M737.28 902.20544a40.96 40.96 0 0 1-55.95136-14.99136l-61.44-106.43456a40.96 40.96 0 0 1 70.94272-40.96l61.44 106.43456A40.96 40.96 0 0 1 737.28 902.20544z" fill="currentColor"></path><path d="M512 962.56a40.96 40.96 0 0 1-40.96-40.96v-122.88a40.96 40.96 0 1 1 81.92 0v122.88a40.96 40.96 0 0 1-40.96 40.96z" fill="currentColor"></path><path d="M286.72 902.20544a40.96 40.96 0 0 1-14.99136-55.95136l61.44-106.43456a40.96 40.96 0 1 1 70.94272 40.96l-61.44 106.43456a40.96 40.96 0 0 1-55.95136 14.99136z" fill="currentColor"></path><path d="M121.79456 737.28a40.96 40.96 0 0 1 14.99136-55.95136l106.43456-61.44a40.96 40.96 0 0 1 40.96 70.94272l-106.43456 61.44A40.96 40.96 0 0 1 121.79456 737.28z" fill="currentColor"></path><path d="M61.44 512a40.96 40.96 0 0 1 40.96-40.96h122.88a40.96 40.96 0 1 1 0 81.92H102.4a40.96 40.96 0 0 1-40.96-40.96z" fill="currentColor"></path><path d="M121.79456 286.72a40.96 40.96 0 0 1 55.95136-14.99136l106.43456 61.44a40.96 40.96 0 1 1-40.96 70.94272l-106.43456-61.44A40.96 40.96 0 0 1 121.79456 286.72z" fill="currentColor"></path><path d="M286.72 121.79456a40.96 40.96 0 0 1 55.95136 14.99136l61.44 106.43456a40.96 40.96 0 0 1-70.94272 40.96l-61.44-106.43456A40.96 40.96 0 0 1 286.72 121.79456z" fill="currentColor"></path></svg>卡顿
+                    </div>
+
+                    <div class="fic4-type-card fic4-card-2" onclick="selectFic4Type(this)">
+                        <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M511.488 23.04c-268.8 0-486.4 217.6-486.4 486.4s217.6 486.4 486.4 486.4 486.4-217.6 486.4-486.4-217.6-486.4-486.4-486.4z m0 162.304c35.84 0 65.024 29.184 65.024 65.024l-32.256 356.864H479.232l-32.256-356.864c-0.512-35.84 28.672-65.024 64.512-65.024z m3.072 615.936h-3.072c-35.84-1.024-64-30.208-63.488-66.048s30.208-64 66.048-63.488c35.84 1.024 64 30.208 63.488 66.048-0.512 34.816-28.672 62.976-62.976 63.488z" fill="currentColor"></path></svg>货品损坏
+                    </div>
+
+                    <div class="fic4-type-card fic4-card-3" onclick="selectFic4Type(this)">
+                        <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M512 32C251.4285715625 32 32 251.4285715625 32 512s219.4285715625 480 480 480 480-219.4285715625 480-480-219.4285715625-480-480-480z m205.7142853125 617.142856875c20.5714284375 20.5714284375 20.5714284375 48 0 61.714286249999994-20.5714284375 20.5714284375-48 20.5714284375-61.714285312499996 0l-137.142856875-137.1428578125L374.857143125 717.7142853125c-20.5714284375 20.5714284375-48 20.5714284375-68.5714284375 0s-20.5714284375-54.857143125 0-68.5714284375l144-144-137.1428578125-137.142856875c-20.5714284375-13.714285312500001-20.5714284375-41.142856875 0-61.714285312499996 20.5714284375-20.5714284375 48-20.5714284375 61.714286249999994 0l137.142856875 137.142856875 144-144c20.5714284375-20.5714284375 48-20.5714284375 68.5714284375 0 20.5714284375 20.5714284375 20.5714284375 48 0 68.5714284375L580.5714284375 512l137.142856875 137.142856875z" fill="currentColor"></path></svg>暗码不一致
+                    </div>
+
+                    <div class="fic4-type-card fic4-card-4" onclick="selectFic4Type(this)">
+                        <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M680.063205 69.873394H145.983327v890.132106h791.229563V317.132824L680.063205 69.873394zM398.963039 321.495178l22.775726-23.588231 121.302717 121.302717 120.749108-120.295784 22.491247 22.491247-120.286574 120.286574 120.659057 120.204709-22.773679 23.590278-121.293507-120.840182L421.738765 585.495898l-22.794145-23.608698 120.659057-119.752407L398.963039 321.495178z m241.539149 490.156506H343.790462v-49.453318h296.711726v49.453318z m98.903567-98.903567H343.790462v-49.453319h395.615293v49.453319z" fill="currentColor"></path></svg>信息与实物不一致
+                    </div>
+
+                    <div class="fic4-type-card fic4-card-5" onclick="selectFic4Type(this)">
+                        <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M810.856471 612.109612l-426.352325 314.309263a103.980569 103.980569 0 0 1-61.684473 20.156234H156.770703C69.874942 946.255169-0.31994 877.659987 0 793.451724V153.123385C-0.31994 68.915121 69.874942 0.383928 156.770703 0h538.01146c86.959749 0.383928 157.154632 68.915121 156.770703 153.123385V532.380511c0 31.290153-15.03719 60.78864-40.696395 79.793089z" fill="currentColor"></path><path d="M566.166198 339.776504H269.389658a49.142816 49.142816 0 0 1-49.910673-48.37496c0-26.747002 22.395815-48.37496 49.910673-48.37496h296.77654c27.514858 0 49.910673 21.627958 49.910673 48.37496 0 26.683014-22.395815 48.310972-49.910673 48.310972z m0 245.330154H269.389658a49.142816 49.142816 0 0 1-49.910673-48.37496c0-26.683014 22.395815-48.310972 49.910673-48.310972h296.77654c27.514858 0 49.910673 21.627958 49.910673 48.310972 0 26.747002-22.395815 48.37496-49.910673 48.37496z" fill="currentColor"></path></svg>使用建议
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="fic4-white-card">
+                <div class="fic4-desc-header">反馈描述</div>
+                <textarea class="fic4-textarea-box" placeholder="说说您的建议或问题，以便我们提供更好的服务"></textarea>
+                
+                <div class="fic4-upload-btn">+</div>
+            </div>
+
+            <div class="fic4-white-card" style="margin-bottom: 0;">
+                <div class="fic4-section-title">联系方式（必填）</div>
+                
+                <div class="fic4-contact-row">
+                    <div class="fic4-contact-label">姓名:</div>
+                    <input type="text" class="fic4-contact-input" placeholder="请输入您的姓名">
+                </div>
+                
+                <div class="fic4-contact-row">
+                    <div class="fic4-contact-label">手机号:</div>
+                    <input type="tel" class="fic4-contact-input" placeholder="请输入您的手机号">
+                </div>
+            </div>
+        </div>
+        
+        <div class="fic4-f5-container">
+            <button class="fic4-submit-btn" onclick="alert('反馈已提交！')">提交</button>
+        </div>
+    </div>
+</div>
+
+<!--fic5-->
+<div id="page-fic5-detail">
+    <div class="detail-header">
+        <div class="d-back-btn" onclick="closeFic5Detail()">&lt; 返回</div>
+        <div class="d-header-title">提示</div>
+        <div style="width: 50px;"></div>
+    </div>
+    
+    <div class="fic5-content">
+        <img src="./err.png" class="fic5-avatar" alt="小程序Logo">
+        
+        <div class="fic5-title">页面不存在</div>
+        
+        <div class="fic5-desc">该页面不存在，你可以进入汾享会员首页获取更多服务</div>
+    </div>
+</div>
+
+
+<!--C2-->
+<div id="page-c2-detail">
+    <div class="detail-header">
+        <div class="d-back-btn" onclick="closeC2Detail()">&lt; 返回</div>
+        <div class="d-header-title">用户协议</div>
+        <div style="width: 50px;"></div>
+    </div>
+    
+    <div class="detail-content">
+        <h1 class="d-title">用户服务协议</h1>
+        <p class="d-text">欢迎您使用本应用。在您使用本应用提供的各项服务之前，请务必仔细阅读并透彻理解本《用户协议》（以下简称“本协议”）。</p>
+        
+        <!--<h3 class="d-sub-title">1. 协议的接受</h3>
+        <p class="d-text">当您点击“同意”或实际开始使用本应用服务时，即表示您已充分阅读、理解并接受本协议的全部内容，本协议即在您与本公司之间产生法律约束力。</p>
+        
+        <h3 class="d-sub-title">2. 服务内容</h3>
+        <p class="d-text">本应用主要为您提供票据感应、真伪验证、产品溯源信息查询等服务。具体服务内容以本应用实际提供的功能为准。</p>
+        
+        <h3 class="d-sub-title">3. 用户行为规范</h3>
+        <p class="d-text">您在使用本服务过程中，应当遵守国家相关法律法规，不得利用本应用从事任何违法犯罪活动，不得上传、发布、传播任何违反法律法规、违背公序良俗的信息。</p>
+        
+        <h3 class="d-sub-title">4. 隐私保护</h3>
+        <p class="d-text">我们非常重视对用户隐私的保护。我们将按照相关法律法规的规定，采取合理措施保护您的个人信息安全，具体细节请参阅我们的《隐私政策》。</p>
+        
+        <h3 class="d-sub-title">5. 免责声明</h3>
+        <p class="d-text">本应用提供的验证结果仅供参考，如因不可抗力、网络延迟、设备故障等原因导致验证服务中断或结果误差，本公司将在法律允许的范围内免除相应责任。</p>
+        
+        <p class="d-text" style="margin-top: 40px; text-align: center; color: #bbb; font-size: 12px;">本协议最终解释权归本公司所有<br>更新日期：2026年4月</p>  -->
     </div>
 </div>
         
@@ -769,8 +1303,76 @@
         if (MOCK_DB.validCodes.includes(val)) alert("比对通过！");
         else alert("无效口令！");
     }
-    
 
+
+    // ====== Fic1 详情页开启与关闭逻辑 ======
+    function openFic1Detail() {
+        document.getElementById('page-fic1-detail').style.display = 'flex';
+    }
+    
+    function closeFic1Detail() {
+        document.getElementById('page-fic1-detail').style.display = 'none';
+    }
+   
+    
+   // ====== Fic2  ======
+    
+    function openFic2Detail() {
+        const page = document.getElementById('page-fic2-detail');
+        if(page) page.style.display = 'flex';
+    }
+    function closeFic2Detail() {
+        const page = document.getElementById('page-fic2-detail');
+        if(page) page.style.display = 'none';
+        closeFic2Fullscreen(); // 返回时确保全屏也被关掉
+    }
+    function openFic2Fullscreen(imgSrc, text) {
+        document.getElementById('fic2-fs-img').src = imgSrc;
+        document.getElementById('fic2-fs-text').innerText = text;
+        document.getElementById('fic2-fullscreen-modal').style.display = 'block';
+    }
+    function closeFic2Fullscreen() {
+        document.getElementById('fic2-fullscreen-modal').style.display = 'none';
+    }
+    // ====== 8. Fic4 问题反馈页逻辑 ======
+    function openFic4Detail() {
+        const page = document.getElementById('page-fic4-detail');
+        if(page) page.style.display = 'flex';
+    }
+    
+    function closeFic4Detail() {
+        const page = document.getElementById('page-fic4-detail');
+        if(page) page.style.display = 'none';
+    }
+
+    // Fic4 选项卡单选高亮逻辑
+    function selectFic4Type(clickedElement) {
+        // 找到所有的选项卡并移除激活状态
+        const cards = document.querySelectorAll('.fic4-type-card');
+        cards.forEach(card => card.classList.remove('fic4-active'));
+        // 为当前点击的加上激活状态
+        clickedElement.classList.add('fic4-active');
+    }
+    // ====== 9. Fic5 页面不存在提示页逻辑 ======
+    function openFic5Detail() {
+        const page = document.getElementById('page-fic5-detail');
+        if(page) page.style.display = 'flex';
+    }
+    
+    function closeFic5Detail() {
+        const page = document.getElementById('page-fic5-detail');
+        if(page) page.style.display = 'none';
+    }
+    // ====== 10. C2 用户协议页逻辑 ======
+    function openC2Detail() {
+        const page = document.getElementById('page-c2-detail');
+        if(page) page.style.display = 'flex';
+    }
+    
+    function closeC2Detail() {
+        const page = document.getElementById('page-c2-detail');
+        if(page) page.style.display = 'none';
+    }
 </script>
 </body>
 </html>
