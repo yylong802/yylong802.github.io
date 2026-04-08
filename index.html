@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>汾酒防伪验证系统</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
+        <!-- 引入 manifest 文件 -->
+    <link rel="manifest" href="/manifest.json">
+
+    <!-- 兼容苹果 iOS 的专属设置（苹果对 PWA 自动弹窗支持较差，需手动配置图标） -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="防伪查验">
+    <link rel="apple-touch-icon" href="./app2.png">
+
     <style>
         /* ================= 1. 全局与颜色变量 ================= */
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
