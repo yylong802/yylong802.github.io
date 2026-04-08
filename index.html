@@ -1576,18 +1576,18 @@
     }
 
     // ===== 2. NFC 读取与校验 =====
-        let nfcRunning = false;
-    async function startNfc() {
+        //let nfcRunning = false;
+    //async function startNfc() {
       //  if (!("NDEFReader" in window) || nfcRunning) {
      //       document.getElementById('nfc-log').innerText = "当前环境不支持原生NFC，请点击上方按钮模拟。";
      //       return;
      //   }
       //  try {
-            nfcRunning = true;
-           const ndef = new NDEFReader();
-           await ndef.scan();
-          document.getElementById('nfc-log').innerText = "";
-            ndef.onreading = (event) => { checkAndJump(event.serialNumber); };
+      //      nfcRunning = true;
+       //     const ndef = new NDEFReader();
+      //      await ndef.scan();
+      //     document.getElementById('nfc-log').innerText = "系统已开启自动感应...";
+      //      ndef.onreading = (event) => { checkAndJump(event.serialNumber); };
       //  } catch (e) { 
      //       nfcRunning = false; 
      //       document.getElementById('nfc-log').innerText = "NFC 启动失败: " + e;
