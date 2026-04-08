@@ -16,6 +16,15 @@
             --ticket-gray: #f8f9fa; 
             --text-dark: #333333;   
         }
+
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* 2. 隐藏鼠标点击时的蓝框，但保留键盘导航时的焦点框 */
+        *:focus:not(:focus-visible) {
+            outline: none;
+        }
         
         body, html { height: 100%; width: 100%; background-color: var(--bg-gray); overflow: hidden; }
         .app-container { display: flex; flex-direction: column; height: 100dvh; width: 100%; position: relative; }
@@ -96,35 +105,71 @@
         .oa-icon-img { width: 50px; height: 50px; border-radius: 16px; object-fit: cover; margin-bottom: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
 
         /* ================= 4. Page B 核心结构 ================= */
-        .page-b-wrapper { flex: 1; display: flex; flex-direction: column; position: relative; min-height: 0; }
+        .page-b-wrapper { 
+            flex: 1; display: flex; flex-direction: column; position: relative; min-height: 0; 
+        }
         
+        /* 1. 顶部蓝色背景 (拉长到 140px 以便包容按钮) */
         .f1-blue-bg { 
-            width: 100%; height: 90px; background-color: #1350d2; flex-shrink: 0;
+            width: 100%; height: 140px; background-color: #1350d2; flex-shrink: 0;
             border-radius: 0 0 25px 25px; position: absolute; top: 0; left: 0; z-index: 1; 
         }
-        .f1-header-text { position: relative; z-index: 2; text-align: center; padding: 15px; color: white; font-weight: bold; font-size: 16px; flex-shrink: 0;}
+       .f1-header-text { 
+            position: relative; 
+            z-index: 2; 
+            text-align: left; /* 🌟 1. 改为左对齐 */
+            padding: 20px 25px 10px 25px; /* 🌟 2. 上 右 下 左。这里的 25px 就是左边距，你可以适当加减这个数值，让文字刚好和第一个按钮的左侧在一条直线上 */
+            color: white; 
+            font-weight: bold; 
+            font-size: 16px; 
+            flex-shrink: 0;
+        }
 
+        /* 2. 导航按钮组 (悬浮在蓝色背景之上) */
+        .sub-nav { 
+            display: flex; justify-content: space-around; padding: 5px 15px 15px 15px; flex-shrink: 0; 
+            position: relative; z-index: 2; 
+        }
+        /* 未选中状态：白底，蓝字 */
+        .sub-nav-item { 
+            padding: 14px 30px; border-radius: 20px; 
+            background-color: #ffffff; color: #1351d3; border: 1px solid #ffffff; 
+            font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s; 
+            border-radius: 50px;
+        }
+        /* 选中状态：深蓝底，白字 */
+        .sub-nav-item.active { 
+            background-color: #0035a4; color: #ffffff; border: 1px solid #0035a4; 
+        }
+
+        /* 3. 下方功能卡片 (调整 margin-top 保持与蓝底的交合效果) */
         .f2-function-container {
             width: 92%; margin: 0 auto; flex: 1; background-color: var(--ticket-gray);
             border-radius: 15px 15px 0 0; position: relative; z-index: 10;
-            margin-top: 20px; 
+            margin-top: 10px; /* 压在蓝色背景上的高度 */
             display: flex; flex-direction: column; min-height: 0;
             box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            padding-top: 15px; /* 卡片顶部内边距 */
         }
 
-        .sub-nav { display: flex; justify-content: space-around; padding: 15px 10px; flex-shrink: 0; }
-        .sub-nav-item { padding: 6px 20px; border-radius: 20px; border: 1px solid #0135a3; font-size: 12px; color: var(--primary-blue); font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .sub-nav-item.active { background: var(--primary-blue); color: white; }
-
+        /* 4. 子页面容器 */
         .sub-page { 
             display: none; flex: 1; flex-direction: column; padding: 0 20px 20px 20px; 
             position: relative; overflow-y: auto; min-height: 0; 
         }
         .sub-page.active { display: flex; }
 
-        .ticket-divider { position: relative; height: 30px; margin: 10px -20px; display: flex; align-items: center; flex-shrink: 0;}
-        .ticket-divider-line { flex: 1; border-top: 2px dashed #ccc; margin: 0 15px; }
-        .notch { position: absolute; width: 14px; height: 28px; background-color: var(--bg-gray); top: 1px; }
+        /* 5. 卡片中间的虚线和半圆缺口 (保留你原本的设计) */
+        .ticket-divider { 
+            position: relative; height: 30px; margin: 10px -20px; display: flex; 
+            align-items: center; flex-shrink: 0;
+        }
+        .ticket-divider-line { 
+            flex: 1; border-top: 2px dashed #ccc; margin: 0 15px; 
+        }
+        .notch { 
+            position: absolute; width: 14px; height: 28px; background-color: var(--bg-gray); top: 1px; 
+        }
         .notch-left { left: 0; border-radius: 0 28px 28px 0; }
         .notch-right { right: 0; border-radius: 28px 0 0 28px; }
 
@@ -871,7 +916,7 @@
         }
 
 
-        .scan-btext{color: red;font-size: 12px;}
+        .scan-btext{color: red;font-size: 10px;}
         
     </style>
 </head>
@@ -919,12 +964,14 @@
             <div class="f1-blue-bg"></div>
             <div class="f1-header-text">请选择功能</div>
             
-            <div class="f2-function-container">
+            
                 <div class="sub-nav">
                     <div class="sub-nav-item active" onclick="tabB('B1', this)">二维码验证</div>
                     <div class="sub-nav-item" onclick="tabB('B2', this)">激光码验证</div>
                     <div class="sub-nav-item" onclick="tabB('B3', this)">NFC验证</div>
                 </div>
+
+                    <div class="f2-function-container">
 
                 <!-- B1 扫码页面 -->
                 <div id="subB1" class="sub-page active">
@@ -942,7 +989,7 @@
                             </div>
                         </div>
                         <div class="scan-text">点击扫描瓶盖或盒盖上的二维码
-                            <br><a class="scan-btext">说明：本小程序支持有瓶盖二维码的盒装产品的组合查验，无瓶盖二维码<br>的盒装产品暂仅支持盒码查验。</a></div>
+                            <br><a class="scan-btext">说明：本小程序支持有瓶盖二维码的盒装产品的组合查验，无瓶盖二维码的<br>盒装产品暂仅支持盒码查验。</a></div>
                     </div>
 
                     <div class="ticket-divider">
@@ -963,7 +1010,8 @@
                     
                     <div class="b2-input-wrapper">
                         <input type="number" id="b2-input" class="b2-full-input" placeholder="请输入第二排完整的激光码">
-                        <button class="b2-oval-btn" onclick="checkB2()">确定</button>
+                        <button class="b2-oval-btn" onclick="checkB2()">立即查验</button>
+                        <p class="b2-hint-text">请输入完整的激光码</p>
                     </div>
 
                     <div class="ticket-divider">
@@ -1213,7 +1261,9 @@
     <div class="error-box">
        <!-- <div class="error-icon">⚠️</div>-->
         <div class="error-title">提示</div>
-        <div style="font-size:14px; color:#666;">认证失败:随机数比对不通过</div>
+        
+        
+        <div id="popup-message" ></div>
         <div class="error-btn" onclick="closeErrorPopup()">确定</div>
     </div>
 </div>
@@ -1616,7 +1666,7 @@
         if (uid === TARGET_UID) {
             showPageB3(); addScanLog('FiC4');// UID正确 -> 走加载圈进入结果页
         } else {
-            document.getElementById('error-popup').style.display = 'flex'; // UID错误 -> 弹窗
+            showCustomPopup("摄像头启动失败"); // UID错误 -> 弹窗
         }
     }
     
@@ -1695,17 +1745,47 @@
             stopScanner();
             if (MOCK_DB.usedQRs.includes(txt)) alert("该二维码已过期！");
             else { MOCK_DB.usedQRs.push(txt); alert("验证成功！"); }
-        }).catch(() => { alert("摄像头启动失败"); stopScanner(); });
+        }).catch(() => { showCustomPopup("摄像头启动失败");stopScanner(); });
     }
     function stopScanner() {
         document.getElementById('qr-reader-container').style.display = 'none';
         if (scanner) scanner.stop();
     }
+
+
+
+ // 🌟 1. 改写后的查验逻辑
     function checkB2() {
         const val = document.getElementById('b2-input').value;
-        if (MOCK_DB.validCodes.includes(val)) alert("比对通过！");
-        else alert("无效口令！");
+        
+        // 稍微做个判断，如果不输入东西直接点，提示一下
+        if (!val) {
+            showCustomPopup("请输入激光码");
+            return;
+        }
+
+        if (MOCK_DB.validCodes.includes(val)) {
+            showCustomPopup("暂不支持盒装激光码查验");
+        } else {
+            showCustomPopup("暂不支持盒装激光码查验");
+        }
     }
+
+    // 🌟 2. 呼出自定义弹窗的函数
+    function showCustomPopup(message) {
+        // 把传入的文字塞进弹窗里
+        document.getElementById('popup-message').innerText = message;
+        // 显示弹窗 (用 flex 是为了保持居中对齐)
+        document.getElementById('error-popup').style.display = 'flex'; 
+    }
+
+    // 🌟 3. 关闭自定义弹窗的函数 (你原本 HTML 里绑定的就是这个)
+    function closeErrorPopup() {
+        document.getElementById('error-popup').style.display = 'none';
+    }
+
+
+
 
 
     // ====== Fic1 详情页开启与关闭逻辑 ======
