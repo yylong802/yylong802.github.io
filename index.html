@@ -506,9 +506,24 @@
 
         /* ================= 错误弹窗样式 ================= */
         #error-popup {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
-            background: rgba(0,0,0,0.5); z-index: 4000;
-            display: none; align-items: center; justify-content: center;
+        position: fixed; 
+        top: 0; 
+        left: 0; 
+        width: 100vw; 
+        /* 使用 100% 配合 fixed 更有保障 */
+        height: 100%; 
+        background: rgba(0,0,0,0.6); /* 稍微加深遮罩，更有高级感 */
+        
+        /* 🌟 确保 z-index 真的能压过所有 .page 容器 🌟 */
+        z-index: 9999; 
+        
+        /* 默认隐藏 */
+        display: none; 
+        align-items: center; 
+        justify-content: center;
+        
+        /* 防止弹窗弹出时页面还能滚动 */
+        pointer-events: auto; 
         }
         .error-box {
             background: white; width: 75%; border-radius: 16px; padding: 30px 20px;
@@ -903,7 +918,7 @@
         .survey-card {
             background: white;
             /* 🌟 重点：把之前的负边距改成了 0，让它稳稳地待在透明推手下面 */
-            margin: 0 16.5px 30px 16.5px; 
+            margin: 0 30.5px 30px 30.5px; 
             border-radius: 12px;
             padding: 25px 20px;
             box-shadow: 0 8px 20px rgba(223, 42, 45, 0.15); 
@@ -1278,17 +1293,7 @@
     </div>
 </div>
 
-<!-- ================= 失败错误弹窗 ================= -->
-<div id="error-popup">
-    <div class="error-box">
-       <!-- <div class="error-icon">⚠️</div>-->
-        <div class="error-title">提示</div>
-        
-        
-        <div id="popup-message" ></div>
-        <div class="error-btn" onclick="closeErrorPopup()">确定</div>
-    </div>
-</div>
+
 
 <div id="page-fic1-detail">
     <div class="detail-header">
@@ -1632,6 +1637,19 @@
         </form>
     </div>
 </div>
+
+
+<!-- ================= 失败错误弹窗 ================= -->
+<div id="error-popup">
+    <div class="error-box">
+       <!-- <div class="error-icon">⚠️</div>-->
+        <div class="error-title">提示</div>
+        
+        
+        <div id="popup-message" ></div>
+        <div class="error-btn" onclick="closeErrorPopup()">确定</div>
+    </div>
+</div>
         
 
       
@@ -1686,7 +1704,7 @@
     // 匹配校验逻辑
     function checkAndJump(uid) {
         if (uid === TARGET_UID) {
-            showPageB3(); addScanLog('FiC4');// UID正确 -> 走加载圈进入结果页
+            showPageB3(); addScanLog('青花汾酒 (53度20升级版)');// UID正确 -> 走加载圈进入结果页
         } else {
             showCustomPopup("摄像头启动失败"); // UID错误 -> 弹窗
         }
@@ -1899,9 +1917,7 @@
     // ====== 11. C1 查验记录 (Log) 逻辑 ======
     
     // 存储历史记录的数组 (预留了一条演示数据)
-    let scanLogData = [
-        { model: "青花汾酒 (53度20升级版)", time: "2026-4-8 10:55:20" }
-    ];
+    let scanLogData = [];
 
     // 添加一条新记录的核心函数
     function addScanLog(modelName) {
@@ -2004,6 +2020,20 @@
         // 提交后自动清空表单，方便下次测试
         document.getElementById('surveyForm').reset();
     }
+
+    
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .then(registration => {
+                console.log('SW 注册成功:', registration);
+                })
+                .catch(err => {
+                console.log('SW 注册失败:', err);
+                });
+            });
+        }
+
 </script>
 </body>
 </html>
