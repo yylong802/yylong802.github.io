@@ -963,10 +963,76 @@
 
 
         .scan-btext{color: red;font-size: 9px;}
+
+
+        /* 1. 启动页样式 */
+        #pwa-splash-screen {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: #ffffff;
+            z-index: 999999; /* 确保在最最最上层 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease;
+        }
+
+        /* 2. 动画元素样式 */
+        .loader-wrapper { position: relative; width: 120px; height: 120px; margin-bottom: 20px; }
+        .loader-svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+        .green-dot { fill: #00c853; }
+        .splash-logo { 
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            width: 105px; height: 90px; border-radius: 50%; 
+        }
+
+        /* 3. 文字样式 */
+        .splash-text { text-align: center; }
+        .text-main { font-size: 18px; font-weight: bold; color: #333; margin-bottom: 5px; }
+        .text-sub { font-size: 13px; color: #999; }
+
+        /* 4. 主内容初始隐藏，加载完再淡入 */
+        #main-content {
+            opacity: 0;
+            transition: opacity 0.8s ease;
+        }
+
+        /* 加载完成后的状态 */
+        body.pwa-loaded #main-content {
+            opacity: 1;
+        }
+
+        body.pwa-loaded {
+            overflow: auto !important; /* 加载完允许滚动 */
+        }
         
     </style>
 </head>
 <body>
+
+    <body>
+    <div id="pwa-splash-screen">
+        <div class="loader-wrapper">
+            <svg class="loader-svg" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="48" stroke="#f0f0f0" stroke-width="4" fill="none" />
+                <circle class="green-dot" cx="98" cy="50" r="5">
+                    <animateTransform 
+                        attributeName="transform" type="rotate" 
+                        from="0 50 50" to="360 50 50" 
+                        dur="1.5s" repeatCount="indefinite" />
+                </circle>
+            </svg>
+            <img src="./logo.png" class="splash-logo">
+        </div>
+        <div class="splash-text">
+            <div class="text-main">汾酒防伪</div>
+            <!--div class="text-sub">安全环境检测中...</div>-->
+        </div>
+    </div>
+
+    <div id="main-content">
 
 <div class="app-container">
 
@@ -1675,7 +1741,7 @@
         <button id="pwa-install" style="background:#007bff; border:none; color:#fff; padding:8px 20px; border-radius:6px; font-weight:bold;">立即安装</button>
     </div>
 </div>
-        
+        </div>
 
       
 
@@ -2074,7 +2140,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
         // 延迟 2 秒显示，给用户一点缓冲，体验更好
         setTimeout(() => {
             modal.style.display = 'block';
-        }, 100);
+        }, 2000);
     }
     
     console.log('PWA 就绪：已弹出自定义引导弹窗');
@@ -2101,6 +2167,29 @@ document.getElementById('pwa-close').addEventListener('click', () => {
 });
 
 
+
+    window.addEventListener('load', function() {
+        const splash = document.getElementById('pwa-splash-screen');
+        const body = document.body;
+
+        // 给一秒钟的展示时间，防止页面加载过快导致动画一闪而过
+        setTimeout(() => {
+            if (splash) {
+                // 1. 让启动页淡出
+                splash.style.opacity = '0';
+                
+                // 2. 让主内容淡入
+                body.classList.add('pwa-loaded');
+
+                // 3. 动画结束后彻底移除启动页，不占内存
+                setTimeout(() => {
+                    splash.remove();
+                }, 1111500);
+            }
+        }, 1111200); 
+    });
+
+
 </script>
 </body>
-</html> 
+</html>
