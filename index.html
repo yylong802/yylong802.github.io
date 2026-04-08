@@ -971,6 +971,9 @@
 <div class="app-container">
 
     <!-- ========== Page A ========== -->
+<button>ahhahahhahahhatest</button>
+
+
     <div id="pageA" class="page-content active">
         <div class="page-a-content">
             <div class="carousel-wrapper">
@@ -2042,6 +2045,53 @@
                 });
             });
         }
+
+        // 1. 定义一个变量来存放“安装事件”
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    // 阻止 Chrome 67 及更早版本自动显示弹窗
+    e.preventDefault();
+    
+    // 2. 将事件暂存起来
+    deferredPrompt = e;
+    
+    // 3. 更新你的 UI，显示自定义的安装按钮
+    // 假设你页面上有一个 id 为 "install-btn" 的按钮，默认是隐藏的
+    const installBtn = document.getElementById('install-btn');
+    if (installBtn) {
+        installBtn.style.display = 'block'; 
+    }
+    
+    console.log('PWA 安装意图已被捕获，等待用户点击按钮...');
+});
+
+// 4. 当用户点击你的自定义按钮时，调用接口触发弹窗
+const installBtn = document.getElementById('install-btn');
+if (installBtn) {
+    installBtn.addEventListener('click', async () => {
+        if (deferredPrompt) {
+            // 5. 真正调用浏览器底部的“安装对话框”接口
+            deferredPrompt.prompt();
+            
+            // 6. 等待用户反馈
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`用户安装选择: ${outcome}`);
+            
+            // 7. 事件只能使用一次，用完释放
+            deferredPrompt = null;
+            
+            // 隐藏安装按钮
+            installBtn.style.display = 'none';
+        }
+    });
+}
+
+        // 8. 监听安装成功的事件
+        window.addEventListener('appinstalled', (evt) => {
+            console.log('恭喜！用户已成功安装 PWA 应用');
+        });
+
 
 </script>
 </body>
