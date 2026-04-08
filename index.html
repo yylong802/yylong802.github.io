@@ -47,15 +47,31 @@
         .nav-item.nav-b { justify-content: flex-end; padding-bottom: 8px; } 
         .nav-item.nav-b.active { color: var(--primary-blue); } 
         .nav-b-icon {
-            position: absolute; top: -25px; 
-            width: 58px; height: 58px; background: #3571e7; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 10px rgba(0,123,255,0.3);
-        }
-        .nav-b-icon img { width: 28px; height: 28px;  } 
-        /* 强制规定 SVG 的大小，让它们看起来精致一致 */
+    position: absolute; 
+    top: -25px; 
+    width: 58px; 
+    height: 58px; 
+    background: #3571e7; 
+    border-radius: 50%; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(0,123,255,0.3);
+    overflow: hidden; /* 🌟 保持裁切 */
+}
+
+.nav-b-icon img { 
+    
+    width: 100%;      
+    height: 115%;     
+    
+   
+    object-fit: cover; 
+    
+    display: block;
+}
         .nav-icon svg {
-            width: 26px;  /* 👈 如果觉得小了可以改成 28px，觉得大了改成 24px */
+            width: 26px;  
             height: 26px;
             display: block;
         }
@@ -132,10 +148,16 @@
         }
         /* 未选中状态：白底，蓝字 */
         .sub-nav-item { 
-            padding: 14px 30px; border-radius: 20px; 
-            background-color: #ffffff; color: #1351d3; border: 1px solid #ffffff; 
-            font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s; 
-            border-radius: 50px;
+        padding: 10px 15px;
+        border-radius: 20px;
+        background-color: #ffffff;
+        color: #1351d3;
+        border: 1px solid #ffffff;
+        font-size: 12px;
+        font-weight: normal;
+        cursor: pointer;
+        transition: 0.2s;
+        white-space: nowrap;
         }
         /* 选中状态：深蓝底，白字 */
         .sub-nav-item.active { 
@@ -190,7 +212,7 @@
         .b2-oval-btn { width: 85%; margin-top: 20px; padding: 14px; background: var(--primary-blue); color: white; border: none; border-radius: 30px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 12px rgba(0,123,255,0.2); cursor: pointer; }
 
         .nfc-gif-box { margin-top: 30px; display: flex; flex-direction: column; align-items: center; flex-shrink: 0;}
-        .nfc-gif-box img { width: 340px; height: 440px;  object-fit: cover; box-shadow: 0 4px 20px rgba(0,123,255,0.2); }
+        .nfc-gif-box img { width: 300px; height:350px;  object-fit: cover; box-shadow: 0 4px 20px rgba(0,123,255,0.2); }
 
         #qr-reader-container { position: absolute; top:0; left:0; width: 100%; height: 100%; background: black; z-index: 200; display: none; flex-direction: column; }
         .close-qr { color: white; text-align: center; padding: 20px; background: #333; cursor: pointer; flex-shrink: 0;}
@@ -916,7 +938,7 @@
         }
 
 
-        .scan-btext{color: red;font-size: 10px;}
+        .scan-btext{color: red;font-size: 9px;}
         
     </style>
 </head>
@@ -1011,7 +1033,7 @@
                     <div class="b2-input-wrapper">
                         <input type="number" id="b2-input" class="b2-full-input" placeholder="请输入第二排完整的激光码">
                         <button class="b2-oval-btn" onclick="checkB2()">立即查验</button>
-                        <p class="b2-hint-text">请输入完整的激光码</p>
+                        <p class="b2-hint-text" style="text-align: center;color: #b6b6b6;;"><br>请输入完整的激光码</p>
                     </div>
 
                     <div class="ticket-divider">
@@ -1096,7 +1118,7 @@
                     </svg>售后反馈
                 </div>
                 
-                <button class="logout-btn" onclick="alert('已退出')">退出登录</button>
+                <button class="logout-btn" onclick="showCustomPopup('已退出')">退出登录</button>
             </div>
         </div>
     </div>
@@ -1122,7 +1144,7 @@
         
         <!-- B 页面保持不变 -->
         <div class="nav-item nav-b" onclick="nav('pageB', this)">
-            <div class="nav-b-icon"><img src="./bb.png"></div><span>查验</span>
+            <div class="nav-b-icon"><img src="./bb13.png"></div><span>查验</span>
         </div>
         
         <!-- C 页面 -->
@@ -1465,7 +1487,7 @@
         </div>
         
         <div class="fic4-f5-container">
-            <button class="fic4-submit-btn" onclick="alert('反馈已提交！')">提交</button>
+            <button class="fic4-submit-btn" onclick="showCustomPopup('反馈已提交！')">提交</button>
         </div>
     </div>
 </div>
@@ -1743,8 +1765,8 @@
         scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, 
         (txt) => {
             stopScanner();
-            if (MOCK_DB.usedQRs.includes(txt)) alert("该二维码已过期！");
-            else { MOCK_DB.usedQRs.push(txt); alert("验证成功！"); }
+            if (MOCK_DB.usedQRs.includes(txt)) showCustomPopup("该二维码已过期！");
+            else { MOCK_DB.usedQRs.push(txt); showCustomPopup("验证成功！"); }
         }).catch(() => { showCustomPopup("摄像头启动失败");stopScanner(); });
     }
     function stopScanner() {
@@ -1878,7 +1900,7 @@
     
     // 存储历史记录的数组 (预留了一条演示数据)
     let scanLogData = [
-        { model: "FiC4", time: "2026-04-07 13:19:12" }
+        { model: "青花汾酒 (53度20升级版)", time: "2026-4-8 10:55:20" }
     ];
 
     // 添加一条新记录的核心函数
@@ -1959,24 +1981,24 @@
         const job = document.getElementById('s_job').value;
 
         // 2. 判空合规验证
-        if (!name) return alert('合规提示：请输入您的姓名');
-        if (!gender) return alert('合规提示：请选择您的性别');
+        if (!name) return showCustomPopup('合规提示：请输入您的姓名');
+        if (!gender) return showCustomPopup('合规提示：请选择您的性别');
         
         // 3. 手机号严格正则验证 (验证是否为1开头的11位有效号码)
         const phoneRegex = /^1[3-9]\d{9}$/;
-        if (!phone) return alert('合规提示：请填写联系方式');
+        if (!phone) return showCustomPopup('合规提示：请填写联系方式');
         if (!phoneRegex.test(phone)) {
-            return alert('合规提示：手机号格式错误，请输入真实的11位手机号码');
+            return showCustomPopup('合规提示：手机号格式错误，请输入真实的11位手机号码');
         }
         
         // 4. 其他必选项验证
-        if (!age) return alert('合规提示：请选择您的年龄');
-        if (!edu) return alert('合规提示：请选择您的学历');
-        if (!city) return alert('合规提示：请选择您所在的城市');
-        if (!job) return alert('合规提示：请选择您的职业');
+        if (!age) return showCustomPopup('合规提示：请选择您的年龄');
+        if (!edu) return showCustomPopup('合规提示：请选择您的学历');
+        if (!city) return showCustomPopup('合规提示：请选择您所在的城市');
+        if (!job) return showCustomPopup('合规提示：请选择您的职业');
 
         // 5. 全部合规，执行提交逻辑
-        alert('提交成功！感谢您抽出宝贵的时间参与调研。');
+        showCustomPopup('提交成功！感谢您抽出宝贵的时间参与调研。');
         closeSurvey();
         
         // 提交后自动清空表单，方便下次测试
