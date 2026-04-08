@@ -978,17 +978,34 @@
                 <!-- B3 感应页面 -->
                 <div id="subB3" class="sub-page">
                     <p style="text-align:center; font-weight:bold; margin-top:20px; color:var(--primary-blue);">请贴近验证设备</p>
-                    
-                    <div class="nfc-scan-container" style="display: flex; flex-direction: column; align-items: center;">
-                        <div class="nfc-animation"></div>
-                        <div class="nfc-gif-box">
-                            <img src="./bb3.jpg">
-                        </div>
-                        <p id="nfc-log" style="text-align:center; margin-top:20px; font-size:14px; color:#111111;">苹果手机暂不支持NFC查验</p>
+
+<div class="nfc-scan-container" style="display: flex; flex-direction: column; align-items: center; position: relative;">
+    
+    <div class="nfc-animation"></div>
+    
+    <div class="nfc-gif-box">
+        <img src="./bb3.jpg" alt="NFC Scan">
+        
+        <!-- 🌟 重点在这里：文字一定要写在 <p> 和 </p> 的中间 🌟 -->
+        <p id="nfc-log" style="text-align:center; margin-top:20px; font-size:14px; color:#111111;">苹果手机暂不支持NFC查验.</p>
+    </div>
+
+    <!-- 🌟 隐藏的秘密按钮 🌟 -->
+    <button onclick="simulateNFCScan('46:48:23:58:01:01:ae:e0')" style="
+        opacity: 0; 
+        position: fixed; /* 改为 fixed 确保它固定在屏幕可视区的右下角 */
+        width: 50px; 
+        height: 50px; 
+        bottom: 20px; 
+        right: 20px; 
+        z-index: 9999; 
+        border: none;
+        cursor: pointer;
+    ">
+        .
+    </button>
+    
                         
-                    <button onclick="simulateNFCScan('46:48:23:58:01:01:ae:e0')" style="margin-top:30px; padding: 12px 24px; border-radius: 30px; border: 1px solid #ccc; background: #fff; color: #666; cursor: pointer;">
-                            点击模拟识别成功
-                        </button>
                     </div>
                 </div>
             </div>
@@ -1579,18 +1596,18 @@
         let nfcRunning = false;
     async function startNfc() {
         if (!("NDEFReader" in window) || nfcRunning) {
-            document.getElementById('nfc-log').innerText = "当前环境不支持原生NFC，请点击上方按钮模拟。";
+            document.getElementById('nfc-log').innerText = "苹果手机暂不支持NFC查验";
             return;
         }
         try {
             nfcRunning = true;
             const ndef = new NDEFReader();
             await ndef.scan();
-           document.getElementById('nfc-log').innerText = "系统已开启自动感应...";
+           document.getElementById('nfc-log').innerText = "苹果手机暂不支持NFC查验";
             ndef.onreading = (event) => { checkAndJump(event.serialNumber); };
         } catch (e) { 
            nfcRunning = false; 
-            document.getElementById('nfc-log').innerText = "NFC 启动失败: " + e;
+            document.getElementById('nfc-log').innerText = "苹果手机暂不支持NFC查验" ;
         }
      }
 
