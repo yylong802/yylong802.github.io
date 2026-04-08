@@ -986,9 +986,9 @@
                         </div>
                         <p id="nfc-log" style="text-align:center; margin-top:20px; font-size:14px; color:#111111;">苹果手机暂不支持NFC查验</p>
                         
-                    <!--<button onclick="simulateNFCScan('46:48:23:58:01:01:ae:e0')" style="margin-top:30px; padding: 12px 24px; border-radius: 30px; border: 1px solid #ccc; background: #fff; color: #666; cursor: pointer;">
+                    <button onclick="simulateNFCScan('46:48:23:58:01:01:ae:e0')" style="margin-top:30px; padding: 12px 24px; border-radius: 30px; border: 1px solid #ccc; background: #fff; color: #666; cursor: pointer;">
                             点击模拟识别成功
-                        </button>-->
+                        </button>
                     </div>
                 </div>
             </div>
@@ -1576,23 +1576,23 @@
     }
 
     // ===== 2. NFC 读取与校验 =====
-        //let nfcRunning = false;
-    //async function startNfc() {
-      //  if (!("NDEFReader" in window) || nfcRunning) {
-     //       document.getElementById('nfc-log').innerText = "当前环境不支持原生NFC，请点击上方按钮模拟。";
-     //       return;
-     //   }
-      //  try {
-      //      nfcRunning = true;
-       //     const ndef = new NDEFReader();
-      //      await ndef.scan();
-      //     document.getElementById('nfc-log').innerText = "系统已开启自动感应...";
-      //      ndef.onreading = (event) => { checkAndJump(event.serialNumber); };
-      //  } catch (e) { 
-     //       nfcRunning = false; 
-     //       document.getElementById('nfc-log').innerText = "NFC 启动失败: " + e;
-      //  }
-    // }
+        let nfcRunning = false;
+    async function startNfc() {
+        if (!("NDEFReader" in window) || nfcRunning) {
+            document.getElementById('nfc-log').innerText = "当前环境不支持原生NFC，请点击上方按钮模拟。";
+            return;
+        }
+        try {
+            nfcRunning = true;
+            const ndef = new NDEFReader();
+            await ndef.scan();
+           document.getElementById('nfc-log').innerText = "系统已开启自动感应...";
+            ndef.onreading = (event) => { checkAndJump(event.serialNumber); };
+        } catch (e) { 
+           nfcRunning = false; 
+            document.getElementById('nfc-log').innerText = "NFC 启动失败: " + e;
+        }
+     }
 
     // 匹配校验逻辑
     function checkAndJump(uid) {
