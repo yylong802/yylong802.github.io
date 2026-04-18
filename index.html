@@ -92,7 +92,7 @@
             min-height: 0;
             padding-top: 15px; 
             background-color: white; 
-            background-image: url('./Abk.png'); /* 你的A页面背景图 */
+            background-image: url('./Abk.jpg'); /* 你的A页面背景图 */
             background-size: cover;      
             background-position: center; 
             background-repeat: no-repeat;
@@ -238,7 +238,7 @@
             overflow-y: auto;
             
             /* 🌟 背景图在这里，因为上面不膨胀了，现在它能完美透出来了 🌟 */
-            background-image: url('./Abk.png');
+            background-image: url('./Abk.jpg');
             background-size: cover;      
             background-position: center; 
             background-repeat: no-repeat;
@@ -248,36 +248,58 @@
         .avatar { width: 65px; height: 65px; border-radius: 50%; background: var(--primary-blue); color: white; display: flex; justify-content: center; align-items: center; font-size: 28px; margin-right: 15px; }
         
         /* 🌟🌟🌟 静态组合区容器 🌟🌟🌟 */
-        .c-static-decor-wrapper {
-            width: 100%;
-            margin: 0 0 20px 0; /* 👈 核心：15vh 代表严格占用屏幕高度的15%作为留白，非常精准，不会被其他元素挤压 */
-            display: flex;
-            flex-direction: column; 
-            flex-shrink: 0; /* 禁止被压缩 */
-            /* 删掉了这里的 flex 属性，不让它瞎膨胀了 */
-        }
-        
-        /* 🌟 上半部分：完美包裹头像的蓝色块 🌟 */
-        .c-gradient-fill {
-            width: 100%;
-            background: linear-gradient(to bottom right, #316adf 0%, #1754d5 100%);
-            /* 如果你觉得头像距离下面的图片太近，可以改大这个 10px */
-            padding-bottom: 10px; 
-            /* 删掉了这里的 flex 属性 */
-        }
-        
-        /* 🌟 下半部分：紧接着的图片，彻底消灭缝隙 🌟 */
-        .c-decor-static-img {
-            width: 100%;
-            /* 👇 如果你想规定图片高度，改这里，比如 120px；如果想按比例，用 aspect-ratio: 3/1.2; */
-            height: auto; 
-            display: block; /* 👈 这句是消灭图片与上面 header 之间“幽灵小缝隙”的终极杀手 */
-            margin: 0; 
-            padding: 0;
-            object-fit: cover; 
-            background-color: transparent; 
-        }
+        /* 🌟 1. 外层容器：设置 font-size: 0 杀死幽灵空白节点 */
+.c-static-decor-wrapper {
+    width: 100%;
+    margin: 0 0 20px 0;
+    display: flex;
+    flex-direction: column; 
+    flex-shrink: 0; 
+    font-size: 0; /* 核心去缝代码 */
+}
 
+/* 🌟 2. 蓝色背景块：取消底部 padding，防止溢出 */
+/* 🌟 修改这个背景块 */
+.c-gradient-fill {
+    width: 100%;
+    /* 把原来的 linear-gradient 删掉，直接写你的颜色 */
+    background: #0053df; 
+    padding-bottom: 0; 
+    overflow: hidden; 
+}
+
+/* 🌟 3. 头像区域文字：抢救被 font-size: 0 误伤的文字，并清除自带边距 */
+.profile-header {
+    display: flex; 
+    align-items: center; 
+    padding: 30px 20px 20px 20px; 
+    border-bottom: none; 
+    flex-shrink: 0; 
+}
+.profile-header h3 {
+    font-size: 18px; /* 抢救回来的用户名大小 */
+    margin: 0;       /* 顺手干掉 h3 自带的边距，防止撑出缝隙 */
+    padding: 0;
+    line-height: 1.2;
+}
+.profile-header p {
+    margin: 0;       /* 干掉 p 标签自带的边距 */
+    padding: 0;
+    line-height: 1.2;
+}
+
+/* 🌟 4. 下方图片：移动端去缝终极杀招 */
+.c-decor-static-img {
+    width: 100%;
+    height: auto; 
+    display: block; 
+    margin: 0;
+    margin-top: -1px; /* 核心去缝代码：强行向上偏移 1px 盖住缝隙 */
+    padding: 0;
+    object-fit: cover; 
+    vertical-align: top; /* 对齐基线 */
+    border: none;
+}
         /* 🌟 C 菜单区域 🌟 */
         .c-menu { display: flex; flex-direction: column; flex-shrink: 0; }
         .c-menu-item { padding: 16px 20px; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 15px; color: #333; flex-shrink: 0; background: rgba(255,255,255,0.8); }
