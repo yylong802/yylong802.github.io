@@ -159,7 +159,7 @@
         .sub-nav-item { 
         padding: 10px 15px;
         border-radius: 20px;
-        background-color: #ffffff;
+        background-color: #e5edff;
         color: #1351d3;
         border: 1px solid #ffffff;
         font-size: 12px;
@@ -210,7 +210,7 @@
         .ring-mid { width: 105px; height: 105px; border-radius: 50%; background: var(--mid-blue); display: flex; align-items: center; justify-content: center; }
         .ring-inner { width: 90px; height: 90px; border-radius: 50%; background: #1450d2; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 15px rgba(0,123,255,0.4); }
         .ring-inner img { width: 50px; height: 65px;  }
-        .scan-text { margin-top: 15px; font-weight: bold; text-align: center;color: #6c757d; font-size: 15px; }
+        .scan-text { margin-top: 15px; font-weight: bold; text-align: center;color: #b6b6b6; font-size: 15px; }
 
         .b2-input-wrapper { display: flex; flex-direction: column; align-items: center; width: 100%; margin: 15px 0; flex-shrink: 0; }
         .b2-input-wrapper input[type=number]::-webkit-inner-spin-button, 
@@ -218,7 +218,7 @@
         .b2-input-wrapper input[type=number] { -moz-appearance: textfield; }
         .b2-full-input { width: 100%; padding: 14px 15px; border: 1px solid #ddd; border-radius: 8px; background: #fafafa; outline: none; font-size: 15px; }
         .b2-full-input::placeholder { color: #bbbbbb; }
-        .b2-oval-btn { width: 85%; margin-top: 20px; padding: 14px; background: var(--primary-blue); color: white; border: none; border-radius: 30px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 12px rgba(0,123,255,0.2); cursor: pointer; }
+        .b2-oval-btn { width: 85%; margin-top: 20px; padding: 14px; background: #1351d3; color: white; border: none; border-radius: 30px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 12px rgba(0,123,255,0.2); cursor: pointer; }
 
         .nfc-gif-box { margin-top: 30px; display: flex; flex-direction: column; align-items: center; flex-shrink: 0;}
         .nfc-gif-box img { width: 300px; height:350px;  object-fit: cover; box-shadow: 0 4px 20px rgba(0,123,255,0.2); }
@@ -571,11 +571,40 @@
         }
         
         /* 标题与文字排版规范 */
-        .d-title { font-size: 24px; font-weight: 900; color: #111; margin-bottom: 20px; }
-        .d-large-title { font-size: 20px; font-weight: 800; color: #222; margin: 30px 0 15px 0; border-left: 4px solid var(--primary-blue); padding-left: 10px; line-height: 1; }
-        .d-sub-title { font-size: 16px; font-weight: bold; color: #9f3e33; margin: 25px 0 10px 0; }
-        .d-text { font-size: 15px; color: #666; line-height: 1.6; margin-bottom: 20px; text-align: justify; }
-        
+        .d-title { font-size: 24px; font-weight: 900; color: #c42026; margin-bottom: 20px; }
+        .d-large-title { font-size: 20px; font-weight: 800; color: #c42026; margin: 30px 0 15px 0; line-height: 1; }
+        /* 1. 主标题样式：修改字号使其类似 h2 大小，默认红色加粗 */
+        .d-sub-title { 
+            font-size: 20px; /* 从 16px 放大到 20px，更接近 h2 */
+            font-weight: bold; 
+            color: #9f3e33; /* 你的红色 */
+            margin: 25px 0 10px 0; 
+        }
+
+        /* 2. 黑色小字样式：用于杏花村 */
+        .text-small-black {
+            font-size: 14px; /* 小字号 */
+            color: #333333;  /* 黑色 */
+            font-weight: normal; /* 取消 h3 继承的加粗，让排版更精致 */
+            margin-left: 8px; /* 和前面的冒号稍微拉开一点间距 */
+        }
+
+        /* 3. 红色小字样式：用于网址 */
+        .text-small-red {
+            font-size: 14px; /* 小字号 */
+            color: #9f3e33;  /* 保持与标题同色，或者换成更亮的红色如 #df2a2d */
+            font-weight: normal; /* 取消加粗 */
+            margin-left: 8px;
+        }
+
+        /* 你原本的段落样式保持不变即可 */
+        .d-text { 
+            font-size: 15px; 
+            color: #666; 
+            line-height: 1.6; 
+            margin-bottom: 20px; 
+            text-align: justify; 
+        }
         /* 地址框 */
         .d-address-box {
             font-size: 14px; color: #444; font-weight: 500; margin-bottom: 15px;
@@ -898,43 +927,59 @@
 
 
 
-        /* ================= 问卷调查页面样式 ================= */
+        /* ================= 问卷调查页面样式优化 ================= */
         #page-survey {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
-            /* 🌟 宽度 100% 铺满屏幕，高度随原图比例自动往下延展，绝不裁切变形！ */
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100vw; 
+            /* 使用 100dvh 确保在所有手机浏览器（含工具栏）中都能撑满 */
+            height: 100dvh; 
             background: url('./wenjuan.jpg') no-repeat top center;
             background-size: 100% auto;
-            background-color: #fcebeb; /* 万一屏幕太长图片不够底，用这个颜色垫底 */
-            z-index: 6000; display: none; flex-direction: column;
-            overflow-y: auto;
+            background-color: #fcebeb;
+            z-index: 6000; 
+            display: none; 
+            flex-direction: column;
+            /* 🌟 核心：禁止整个页面滚动，防止背景图被顶上去 */
+            overflow: hidden; 
+        }
+
+        /* 顶部透明推手区域 */
+.survey-header-bg {
+    background: transparent;
+    
+    /* 🌟 修改这里：把 43vh 改小到 25vh (占据屏幕上方 25% 的位置) */
+    /* 如果你觉得太靠上，就改成 30vh；太靠下，就改成 20vh */
+    height: 25vh; 
+    
+    flex-shrink: 0;
+    position: relative;
+}
+
+/* 白色卡片容器 */
+.survey-card {
+    background: white;
+    margin: 0 30.5px 30px 30.5px; 
+    border-radius: 12px;
+    padding: 25px 20px;
+    box-shadow: 0 8px 20px rgba(223, 42, 45, 0.15); 
+    position: relative;
+    
+    /* 🌟 同步修改这里：公式里的减数必须和上面的一致 (25vh) */
+    /* 100dvh - 25vh (推手高度) - 5vh (底部留白) = 70vh (卡片最大高度) */
+    max-height: calc(100dvh - 25vh - 5vh); 
+    
+    overflow-y: auto; 
+    -webkit-overflow-scrolling: touch; 
+}
+
+        /* 隐藏滚动条（可选，让界面更整洁） */
+        .survey-card::-webkit-scrollbar {
+            display: none;
         }
         
-       
-       /* 顶部背景图区域 */
-        .survey-header-bg {
-            background: transparent; /* 背景变透明，透出大图 */
-            
-            /* 💡 关键数字：这个高度决定了卡片从上往下被推多少距离。
-               你可以修改这个数字（比如 25vh, 35vh, 或者 200px, 280px），
-               直到下方的白色卡片刚好落在图片的留白处！ */
-            height: 28vh; 
-            
-            flex-shrink: 0;
-            position: relative;
-        }
-        
-        /* 白色卡片容器 */
-        .survey-card {
-            background: white;
-            /* 🌟 重点：把之前的负边距改成了 0，让它稳稳地待在透明推手下面 */
-            margin: 0 30.5px 30px 30.5px; 
-            border-radius: 12px;
-            padding: 25px 20px;
-            box-shadow: 0 8px 20px rgba(223, 42, 45, 0.15); 
-            position: relative;
-        }
-        
-        .survey-intro { font-size: 14px; color: #444; line-height: 1.6; margin-bottom: 25px; text-align: justify; }
+        .survey-intro { font-size: 12px; color: #444; line-height: 1.6; margin-bottom: 25px; text-align: justify; }
         
         /* 表单每行 */
         .form-group { display: flex; align-items: center; border-bottom: 1px dashed #f0f0f0; padding: 18px 0; }
@@ -1013,7 +1058,7 @@
 <body>
 
     
-    <div id="pwa-splash-screen" style="
+  <div id="pwa-splash-screen" style="
     position: fixed; 
     top: 0; 
     left: 0; 
@@ -1025,8 +1070,8 @@
     flex-direction: column; 
     align-items: center; 
     justify-content: center; 
-    /* 保持位置向上提升 15% */
-    padding-bottom: 15vh; 
+    /* 🌟 核心修改：从 15vh 加大到 25vh，把整体内容往上顶 */
+    padding-bottom: 25vh; 
     box-sizing: border-box; 
     transition: opacity 0.5s ease-out, visibility 0.5s ease-out; 
     opacity: 1; 
@@ -1037,12 +1082,8 @@
         
         <svg viewBox="0 0 100 100" style="width: 100%; height: 100%; transform: rotate(-90deg);">
             <circle cx="50" cy="50" r="48" stroke="#f2f2f2" stroke-width="1.5" fill="none" />
-            
             <circle cx="98" cy="50" r="2.5" fill="#00c853">
-                <animateTransform 
-                    attributeName="transform" type="rotate" 
-                    from="0 50 50" to="360 50 50" 
-                    dur="1.5s" repeatCount="indefinite" />
+                <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="1.5s" repeatCount="indefinite" />
             </circle>
         </svg>
         
@@ -1111,7 +1152,7 @@
     <div id="pageB" class="page-content">
         <div class="page-b-wrapper">
             <div class="f1-blue-bg"></div>
-            <div class="f1-header-text">请选择功能</div>
+            <div class="f1-header-text">选择防伪验证方式</div>
             
             
                 <div class="sub-nav">
@@ -1138,7 +1179,7 @@
                             </div>
                         </div>
                         <div class="scan-text">点击扫描瓶盖或盒盖上的二维码
-                            <br><a class="scan-btext">说明：本小程序支持有瓶盖二维码的盒装产品的组合查验，无瓶盖二维码的<br>盒装产品暂仅支持盒码查验。</a></div>
+                            <br><a class="scan-btext">说明：本小程序支持有瓶盖二维码的盒装产品的组合查验，无瓶盖二维码<br>的盒装产品暂仅支持盒码查验。</a></div>
                     </div>
 
                     <div class="ticket-divider">
@@ -1174,14 +1215,14 @@
 
                 <!-- B3 感应页面 -->
                 <div id="subB3" class="sub-page">
-                    <p style="text-align:center; font-weight:bold; margin-top:20px; color:var(--primary-blue);">请贴近验证设备</p>
+                    
 
 <div class="nfc-scan-container" style="display: flex; flex-direction: column; align-items: center; position: relative;">
     
     <div class="nfc-animation"></div>
     
     <div class="nfc-gif-box">
-        <img src="./bb3.jpg" alt="NFC Scan">
+        <img src="./bb3.gif" alt="NFC Scan">
         
         <!-- 🌟 重点在这里：文字一定要写在 <p> 和 </p> 的中间 🌟 -->
         <p id="nfc-log" style="text-align:center; margin-top:20px; font-size:14px; color:#111111;">苹果手机暂不支持NFC查验.</p>
@@ -1410,7 +1451,7 @@
 <div id="page-fic1-detail">
     <div class="detail-header">
         <div class="d-back-btn" onclick="closeFic1Detail()">&lt; 返回</div>
-        <div class="d-header-title">介绍详情</div>
+        <div class="d-header-title">企业信息</div>
         <div style="width: 50px;"></div> </div>
     <!--  fic1-->
     <div class="detail-content">
@@ -1427,7 +1468,7 @@
         <p class="d-text">
 公司所在地山西省杏花村具有得天独厚的酿酒自然条件,拥有丰富清洁的地下水源,拥有独特的区域小气候和上千年培育的微生物体系,周边至少5公里内禁止兴建有污染的企业,是驰名中外的传统历史名酒原产地。</p>
         
-        <h2 class="d-large-title">核心功能特性</h2>
+        <h2 class="d-large-title">生产与工艺理念</h2>
         
         <p class="d-text">
             精心:专心、周密、细心<br>
@@ -1450,16 +1491,9 @@
         8.态度决定行为,行为培养性格,性格决定命运。<br>
         9.用文化凝聚人心,用制度驾驭人性,用品牌成就人生。</p>
         
-        <h3 class="d-sub-title">公司地址:  杏花村</h3>
-        
-        <!--<div class="d-address-box">
-            📍 地址：上海市黄浦区人民大道200号
-        </div> -->
-        <h3 class="d-sub-title">公司网址 www.abc.cn</h3>
-        
-    <!--     <div class="d-map-placeholder" style="padding: 0; overflow: hidden; border: none; position: relative;">
-            <a href="https://uri.amap.com/marker?position=121.4737,31.2304&name=上海市黄浦区人民大道200号" target="_blank" style="display: block; width: 100%; height: 100%;">
-                 --> 
+        <h3 class="d-sub-title">公司地址 <span class="text-small-black">汾阳市杏花村</span></h3>
+
+        <h3 class="d-sub-title">公司网址 <span class="text-small-red">www.fenjiu.com.cn</span></h3>
            <img src="./map.png" class="d-img-content">
                     
                      <br><br><br><br><br><br><br><br>
@@ -1481,7 +1515,7 @@
 <div id="page-fic2-detail">
     <div class="detail-header">
         <div class="d-back-btn" onclick="closeFic2Detail()">&lt; 返回</div>
-        <div class="d-header-title">Fic2 流程图示</div>
+        <div class="d-header-title">工艺流程</div>
         <div style="width: 50px;"></div>
     </div>
     
@@ -2222,7 +2256,7 @@ document.getElementById('pwa-close').addEventListener('click', () => {
                     splash.remove();
                 }, 1800);
             }
-        }, 700); 
+        }, 500); 
     });
 
 
