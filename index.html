@@ -1929,58 +1929,38 @@
         document.getElementById('error-popup').style.display = 'none';
     }
 
-    // ===== 3. 独立结果页逻辑 (含缓冲与秒动时钟) =====
+ // ===== 3. 独立结果页逻辑 (含缓冲与秒动时钟) =====
 let clockInterval = null; 
 
 function showPageB3() {
     const page = document.getElementById('pageB3-result');
     
-    // 🌟 核心修复：把这里改成你 CSS 里真正那个大白屏的 ID
-    const loader = document.getElementById('pwa-splash-screen'); 
+    // 🌟 核心修改：把你的【两个】加载层都抓出来！
+    const splashScreen = document.getElementById('pwa-splash-screen'); // 第一个：大白屏+绿圈
+    const progressBar = document.getElementById('loading-screen');     // 第二个：进度条
     
-    // 每次打开前，先剥夺 pwa-loaded，让内容强行变回透明 (opacity: 0)
+    // 打开前，重置状态
     document.body.classList.remove('pwa-loaded'); 
 
     if (page) {
         page.style.display = 'block'; 
-        if (loader) loader.style.display = 'flex'; // 唤出大白屏加载圈
+        
+        // 如果它们存在，就让它们显示出来
+        if (splashScreen) splashScreen.style.display = 'flex'; 
+        if (progressBar) progressBar.style.display = 'flex'; 
 
-        // 🌟 统一的结束加载动作
-        let isFinished = false;
-        const finishLoading = () => {
-            if (isFinished) return;
-            isFinished = true;
-            if (loader) loader.style.display = 'none'; // 真正把大白屏撤掉！
+        // 🌟 核心：无视网络，400毫秒后强行秒开！
+        setTimeout(() => {
+            // 时间一到，把这俩加载层统统撤掉！
+            if (splashScreen) splashScreen.style.display = 'none'; 
+            if (progressBar) progressBar.style.display = 'none'; 
             
-            // 撤掉白屏的瞬间，加上类名触发 0.8s 淡入动画
+            // 撤掉遮罩的瞬间，触发 0.8s 淡入动画
             setTimeout(() => {
                 document.body.classList.add('pwa-loaded'); 
-            }, 50);
-        };
-
-        // 🌟 终极兜底机制：最多只等2秒，2秒后不管图片下没下完，必须撤掉白屏！
-        const safetyTimeout = setTimeout(() => {
-            finishLoading();
-        }, 2000);
-
-        // 获取背景图预加载
-        const bgUrlMatch = window.getComputedStyle(page).backgroundImage.match(/url\(['"]?(.*?)['"]?\)/);
-        if (bgUrlMatch && bgUrlMatch[1]) {
-            const img = new Image();
-            img.src = bgUrlMatch[1]; 
+            }, 20); 
             
-            img.onload = () => { 
-                clearTimeout(safetyTimeout); // 图片下完了，取消2秒警报
-                setTimeout(finishLoading, 500); // 缓冲 0.5 秒让动画更自然
-            };
-            img.onerror = () => { 
-                clearTimeout(safetyTimeout);
-                finishLoading(); // 万一图片挂了，也要保证内容能出来，不能白屏
-            };
-        } else {
-            clearTimeout(safetyTimeout);
-            finishLoading();
-        }
+        }, 400); // 这里的 400ms 也就是 0.4 秒，你可以随意调整
     }
     
     // 时钟逻辑保持不变
@@ -1989,6 +1969,9 @@ function showPageB3() {
     clockInterval = setInterval(updateLiveTime, 1000); 
 }
 
+
+
+
 function closePageB3() {
     const page = document.getElementById('pageB3-result');
     if (page) {
@@ -1996,13 +1979,15 @@ function closePageB3() {
     }
     if (clockInterval) clearInterval(clockInterval); 
     
-    // 关闭时重置类名，确保下次打开依然有动画
     document.body.classList.remove('pwa-loaded'); 
     
-    // 重置大白屏状态
-    const loader = document.getElementById('pwa-splash-screen');
-    if(loader) loader.style.display = 'flex'; 
+    // 🌟 关闭时，把两个加载层都重置回显示状态，等下次打开再用
+    const splashScreen = document.getElementById('pwa-splash-screen');
+    const progressBar = document.getElementById('loading-screen');
+    if(splashScreen) splashScreen.style.display = 'flex'; 
+    if(progressBar) progressBar.style.display = 'flex'; 
 }
+
     // 更新所有的秒动时间
     function updateLiveTime() {
         const now = new Date();
