@@ -1918,37 +1918,56 @@ let clockInterval = null;
 
 function showPageB3() {
     const page = document.getElementById('pageB3-result');
-    const loader = document.getElementById('loading-screen');
     
-    // 🌟 核心 1：每次打开前，先剥夺 pwa-loaded，让它强行变回透明 (opacity: 0)
+    // 🌟 核心修复：把这里改成你 CSS 里真正那个大白屏的 ID
+    const loader = document.getElementById('pwa-splash-screen'); 
+    
+    // 每次打开前，先剥夺 pwa-loaded，让内容强行变回透明 (opacity: 0)
     document.body.classList.remove('pwa-loaded'); 
 
     if (page) {
         page.style.display = 'block'; 
-        loader.style.display = 'flex'; // 唤出加载圈
+        if (loader) loader.style.display = 'flex'; // 唤出大白屏加载圈
+
+        // 🌟 统一的结束加载动作
+        let isFinished = false;
+        const finishLoading = () => {
+            if (isFinished) return;
+            isFinished = true;
+            if (loader) loader.style.display = 'none'; // 真正把大白屏撤掉！
+            
+            // 撤掉白屏的瞬间，加上类名触发 0.8s 淡入动画
+            setTimeout(() => {
+                document.body.classList.add('pwa-loaded'); 
+            }, 50);
+        };
+
+        // 🌟 终极兜底机制：最多只等2秒，2秒后不管图片下没下完，必须撤掉白屏！
+        const safetyTimeout = setTimeout(() => {
+            finishLoading();
+        }, 2000);
 
         // 获取背景图预加载
         const bgUrlMatch = window.getComputedStyle(page).backgroundImage.match(/url\(['"]?(.*?)['"]?\)/);
         if (bgUrlMatch && bgUrlMatch[1]) {
             const img = new Image();
             img.src = bgUrlMatch[1]; 
+            
             img.onload = () => { 
-                setTimeout(() => { 
-                    loader.style.display = 'none'; // 隐藏加载圈
-                    // 🌟 核心 2：就在加载圈消失的这一秒，赋予它 pwa-loaded，触发 0.8s 淡入动画！
-                    document.body.classList.add('pwa-loaded'); 
-                }, 500); 
+                clearTimeout(safetyTimeout); // 图片下完了，取消2秒警报
+                setTimeout(finishLoading, 500); // 缓冲 0.5 秒让动画更自然
             };
             img.onerror = () => { 
-                loader.style.display = 'none'; 
-                document.body.classList.add('pwa-loaded'); // 万一图挂了，也要保证内容能出来
+                clearTimeout(safetyTimeout);
+                finishLoading(); // 万一图片挂了，也要保证内容能出来，不能白屏
             };
         } else {
-            loader.style.display = 'none';
-            document.body.classList.add('pwa-loaded');
+            clearTimeout(safetyTimeout);
+            finishLoading();
         }
     }
     
+    // 时钟逻辑保持不变
     if (clockInterval) clearInterval(clockInterval); 
     updateLiveTime(); 
     clockInterval = setInterval(updateLiveTime, 1000); 
@@ -1961,13 +1980,13 @@ function closePageB3() {
     }
     if (clockInterval) clearInterval(clockInterval); 
     
-    // 🌟 核心 3：关闭时重置类名，确保下次打开依然有动画
+    // 关闭时重置类名，确保下次打开依然有动画
     document.body.classList.remove('pwa-loaded'); 
     
-    const loader = document.getElementById('loading-screen');
+    // 重置大白屏状态
+    const loader = document.getElementById('pwa-splash-screen');
     if(loader) loader.style.display = 'flex'; 
 }
-
     // 更新所有的秒动时间
     function updateLiveTime() {
         const now = new Date();
