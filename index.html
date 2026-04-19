@@ -1914,44 +1914,59 @@
     }
 
     // ===== 3. 独立结果页逻辑 (含缓冲与秒动时钟) =====
-    let clockInterval = null; 
+let clockInterval = null; 
 
-    function showPageB3() {
-        const page = document.getElementById('pageB3-result');
-        const loader = document.getElementById('loading-screen');
-        
-        if (page) {
-            page.style.display = 'block'; 
-            loader.style.display = 'flex'; // 唤出加载圈
+function showPageB3() {
+    const page = document.getElementById('pageB3-result');
+    const loader = document.getElementById('loading-screen');
+    
+    // 🌟 核心 1：每次打开前，先剥夺 pwa-loaded，让它强行变回透明 (opacity: 0)
+    document.body.classList.remove('pwa-loaded'); 
 
-            // 获取背景图预加载
-            const bgUrlMatch = window.getComputedStyle(page).backgroundImage.match(/url\(['"]?(.*?)['"]?\)/);
-            if (bgUrlMatch && bgUrlMatch[1]) {
-                const img = new Image();
-                img.src = bgUrlMatch[1]; 
-                img.onload = () => { setTimeout(() => { loader.style.display = 'none'; }, 500); };
-                img.onerror = () => { loader.style.display = 'none'; };
-            } else {
-                loader.style.display = 'none';
-            }
+    if (page) {
+        page.style.display = 'block'; 
+        loader.style.display = 'flex'; // 唤出加载圈
+
+        // 获取背景图预加载
+        const bgUrlMatch = window.getComputedStyle(page).backgroundImage.match(/url\(['"]?(.*?)['"]?\)/);
+        if (bgUrlMatch && bgUrlMatch[1]) {
+            const img = new Image();
+            img.src = bgUrlMatch[1]; 
+            img.onload = () => { 
+                setTimeout(() => { 
+                    loader.style.display = 'none'; // 隐藏加载圈
+                    // 🌟 核心 2：就在加载圈消失的这一秒，赋予它 pwa-loaded，触发 0.8s 淡入动画！
+                    document.body.classList.add('pwa-loaded'); 
+                }, 500); 
+            };
+            img.onerror = () => { 
+                loader.style.display = 'none'; 
+                document.body.classList.add('pwa-loaded'); // 万一图挂了，也要保证内容能出来
+            };
+        } else {
+            loader.style.display = 'none';
+            document.body.classList.add('pwa-loaded');
         }
-        
-        if (clockInterval) clearInterval(clockInterval); 
-        updateLiveTime(); 
-        clockInterval = setInterval(updateLiveTime, 1000); 
     }
+    
+    if (clockInterval) clearInterval(clockInterval); 
+    updateLiveTime(); 
+    clockInterval = setInterval(updateLiveTime, 1000); 
+}
 
-    function closePageB3() {
-        const page = document.getElementById('pageB3-result');
-        if (page) {
-            page.style.display = 'none'; 
-        }
-        if (clockInterval) clearInterval(clockInterval); 
-        
-        // 重置加载圈状态，确保下次打开还有加载动画
-        const loader = document.getElementById('loading-screen');
-        if(loader) loader.style.display = 'flex'; 
+function closePageB3() {
+    const page = document.getElementById('pageB3-result');
+    if (page) {
+        page.style.display = 'none'; 
     }
+    if (clockInterval) clearInterval(clockInterval); 
+    
+    // 🌟 核心 3：关闭时重置类名，确保下次打开依然有动画
+    document.body.classList.remove('pwa-loaded'); 
+    
+    const loader = document.getElementById('loading-screen');
+    if(loader) loader.style.display = 'flex'; 
+}
 
     // 更新所有的秒动时间
     function updateLiveTime() {
