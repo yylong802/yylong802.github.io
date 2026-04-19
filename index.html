@@ -1406,69 +1406,51 @@
 
 
 
-            <!-- ================= G1 生产信息 ================= -->
             <div id="result-G1" class="result-tab-content active">
-                <div class="table-row title-row indent-1">
-                    <div class="cell">生产信息</div>
-                </div>
-                <div class="pink-data-block">
-                    <div class="table-row indent-2">
-                        <div class="cell label">生产日期:</div>
-                        <div class="cell value blue-data">2025-06-06</div>
-                    </div>
-                    <div class="table-row indent-2">
-                        <div class="cell label">生产工厂:</div>
-                        <div class="cell value blue-data">汾酒股份成装一分厂</div>
-                    </div>
-                    <div class="table-row indent-2">
-                        <div class="cell label">生产车间:</div>
-                        <div class="cell value blue-data">成四车间</div>
-                    </div>
-                    <div class="table-row indent-2">
-                        <div class="cell label">生产线:</div>
-                        <div class="cell value blue-data">三线</div>
-                    </div>
-                    <div class="table-row indent-2">
-                        <div class="cell label">是否开瓶:</div>
-                        <div class="cell value blue-data">已开瓶</div>
-                    </div>
-                    <div class="table-row indent-2 no-border">
-                        <div class="cell label">验证时间:</div>
-                        <div class="cell value blue-data liveClockText">加载中...</div>
-                    </div>
-                </div>
-            </div>
+    ...
+    <div class="table-row indent-2">
+        <div class="cell label">生产日期:</div>
+        <div class="cell value blue-data" id="g1-date">加载中...</div>
+    </div>
+    <div class="table-row indent-2">
+        <div class="cell label">生产工厂:</div>
+        <div class="cell value blue-data" id="g1-factory">加载中...</div>
+    </div>
+    <div class="table-row indent-2">
+        <div class="cell label">生产车间:</div>
+        <div class="cell value blue-data" id="g1-workshop">加载中...</div>
+    </div>
+    <div class="table-row indent-2">
+        <div class="cell label">生产线:</div>
+        <div class="cell value blue-data" id="g1-line">加载中...</div>
+    </div>
+    <div class="table-row indent-2">
+        <div class="cell label">是否开瓶:</div>
+        <div class="cell value blue-data" id="g1-status">加载中...</div>
+    </div>
+    ...
+</div>
 
-            <!-- ================= G2 检测报告 ================= -->
-            <div id="result-G2" class="result-tab-content" style="display: none;">
-                <div class="table-row title-row indent-1">
-                    <div class="cell">质检报告</div>
-                </div>
-                <div class="pink-data-block">
-                    <div class="table-row indent-2">
-                        <div class="cell label">生产日期:</div>
-                        <div class="cell value blue-data">2025-06-06</div>
-                    </div>
-                    <div class="table-row indent-2">
-                        <div class="cell label">酒精度:</div>
-                        <div class="cell value blue-data">53度</div>
-                    </div>
-                    <div class="table-row indent-2">
-                        <div class="cell label">检查结果:</div>
-                        <div class="cell value blue-data">合格</div>
-                    </div>
-                    <div class="table-row indent-2">
-                        <div class="cell label">质检单号:</div>
-                        <div class="cell value blue-data">20250606143019</div>
-                    </div>
-                    <div class="table-row indent-2 no-border">
-                        <div class="cell label">时间:</div>
-                        <div class="cell value blue-data liveClockText">加载中...</div>
-                    </div>
-                </div>
-            </div>
-
-        </div> 
+<div id="result-G2" class="result-tab-content" style="display: none;">
+    ...
+    <div class="table-row indent-2">
+        <div class="cell label">生产日期:</div>
+        <div class="cell value blue-data" id="g2-date">加载中...</div>
+    </div>
+    <div class="table-row indent-2">
+        <div class="cell label">酒精度:</div>
+        <div class="cell value blue-data" id="g2-alcohol">加载中...</div>
+    </div>
+    <div class="table-row indent-2">
+        <div class="cell label">检查结果:</div>
+        <div class="cell value blue-data" id="g2-result">加载中...</div>
+    </div>
+    <div class="table-row indent-2">
+        <div class="cell label">质检单号:</div>
+        <div class="cell value blue-data" id="g2-id">加载中...</div>
+    </div>
+    ...
+</div>
         
         <div class="jump-bar-wrapper">
             <div class="jump-bar" onclick="location.href='https://your-verify-link.com'">
@@ -2294,38 +2276,31 @@ document.getElementById('pwa-close').addEventListener('click', () => {
 
 
 
-    // 前端验证逻辑 
-async function verifyNfcTag() {
-    // 1. 从浏览器地址栏获取 token 
-    //  NFC 打开: https://domain.com/?token=A1B2C3D4...
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
+// 在 verifyNfcTag 的 result.valid 判断内部
+if (result.valid) {
+    const p = result.product;
 
-    if (!token) {
-        // 不是扫 NFC 进来的，显示普通页面
-        return; 
-    }
+    // 填充 G1 信息
+    document.getElementById('g1-date').innerText = p.date;
+    document.getElementById('g1-factory').innerText = p.factory;
+    document.getElementById('g1-workshop').innerText = p.workshop;
+    document.getElementById('g1-line').innerText = p.line;
+    document.getElementById('g1-status').innerText = p.isOpened ? "已开瓶" : "未开瓶";
+    document.getElementById('g1-status').style.color = p.isOpened ? "red" : "#020101";
 
-    // 2. 发送给你的后端解密并查询
-    try {
-        const response = await fetch(`/api/verify?token=${token}`);
-        const result = await response.json();
+    // 填充 G2 信息
+    document.getElementById('g2-date').innerText = p.date;
+    document.getElementById('g2-alcohol').innerText = p.alcohol;
+    document.getElementById('g2-result').innerText = p.inspectResult;
+    document.getElementById('g2-id').innerText = p.inspectId;
 
-        if (result.valid) {
-            // ✅ 正品逻辑
-            alert(`✅ ${result.message}\n产品名称：${result.product.name}`);
-            // 这里可以触发页面动画或跳转到你做好的产品详情页
-        } else {
-            // ❌ 假货/异常逻辑
-            alert(`❌ 警告：${result.message}`);
-        }
-    } catch (error) {
-        alert("网络连接失败，请重试");
-    }
+    // 填充顶部产品名称
+    const titleEl = document.querySelector('.f-name');
+    if (titleEl) titleEl.innerText = p.name;
+
+    // 切换到结果页
+    showPageB3();
 }
-
-// 页面加载完毕时自动执行
-window.onload = verifyNfcTag;
 
 
 
