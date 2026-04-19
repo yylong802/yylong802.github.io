@@ -85,30 +85,6 @@ module.exports = async function handler(req, res) {
              return res.status(403).json({ valid: false, message: '该产品已被注销或存在异常，请勿购买！' });
         }
 
-                // 🌟 新增逻辑：将该产品的验证次数 +1，并获取更新后的数值
-        const { data: updatedProduct, error: updateError } = await supabase
-            .from('product_whitelist')
-            .update({ check_count: product.check_count + 1 })
-            .eq('uid', realUid)
-            .select()
-            .single();
-
-        // Step 3: 一切正常，返回包含验证次数的信息
-        await logVerification(realUid, 'Success', '查验通过');
-
-        return res.status(200).json({
-            valid: true,
-            message: '验证通过，确认为正品',
-            product: {
-                name: product.product_name,
-                batch: product.batch_number,
-                // 🌟 将最新的验证次数传给前端
-                count: updatedProduct.check_count 
-            }
-        });
-
-
-
         // Step 3: 一切正常，记录成功查验，并返回正品信息
         await logVerification(realUid, 'Success', '查验通过');
         
