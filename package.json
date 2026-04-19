@@ -1,0 +1,8 @@
+{
+  "name": "fenjiu-verify",
+  "version": "1.0.0",
+  "description": "防伪查验系统",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0"
+  }
+}
