@@ -2,160 +2,2305 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- 引入 manifest 文件 -->
-<link rel="manifest" href="/manifest.json">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>汾酒防伪验证系统</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+        <!-- 引入 manifest 文件 -->
+    <link rel="manifest" href="/manifest.json">
 
-<!-- 兼容苹果 iOS 的专属设置（苹果对 PWA 自动弹窗支持较差，需手动配置图标） -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="防伪查验">
-<link rel="apple-touch-icon" href="./app2.png">
-    <title>Web NFC UID 读取与比对</title>
+    <!-- 兼容苹果 iOS 的专属设置（苹果对 PWA 自动弹窗支持较差，需手动配置图标） -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="防伪查验">
+    <link rel="apple-touch-icon" href="/app2.png">
+
     <style>
-        body {
-            font-family: system-ui, -apple-system, sans-serif;
-            margin: 0;
-            padding: 20px;
+        /* ================= 1. 全局与颜色变量 ================= */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+        :root { 
+            --primary-blue: #007bff; 
+            --mid-blue: rgba(0, 123, 255, 0.2);
+            --light-blue: rgba(0, 123, 255, 0.08); 
+            --bg-gray: #eaebef;    
+            --ticket-gray: #f8f9fa; 
+            --text-dark: #333333;   
+        }
+
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* 2. 隐藏鼠标点击时的蓝框，但保留键盘导航时的焦点框 */
+        *:focus:not(:focus-visible) {
+            outline: none;
+        }
+        
+        body, html { height: 100%; width: 100%; background-color: var(--bg-gray); overflow: hidden; }
+        .app-container { display: flex; flex-direction: column; height: 100dvh; width: 100%; position: relative; }
+        
+        .page-content { flex: 1; display: none; flex-direction: column; overflow: hidden; min-height: 0; position: relative; }
+        .page-content.active { display: flex; }
+
+        /* ================= 2. 底部导航 U1 ================= */
+        .bottom-nav { 
+            height: 65px; flex-shrink: 0; background: white; display: flex; position: relative; z-index: 999;
+            box-shadow: 0 -3px 12px rgba(0,0,0,0.12); 
+        }
+        .nav-item {
+            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: var(--text-dark); cursor: pointer; font-size: 12px; font-weight: bold; position: relative;
+        }
+        .nav-icon { font-size: 22px; line-height: 1; margin-bottom: 4px; transition: 0.2s; }
+        .nav-item.active:not(.nav-b) { color: var(--primary-blue); }
+        
+        .nav-item.nav-b { justify-content: flex-end; padding-bottom: 8px; } 
+        .nav-item.nav-b.active { color: var(--primary-blue); } 
+        .nav-b-icon {
+    position: absolute; 
+    top: -25px; 
+    width: 58px; 
+    height: 58px; 
+    background: #3571e7; 
+    border-radius: 50%; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(0,123,255,0.3);
+    overflow: hidden; /* 🌟 保持裁切 */
+}
+
+.nav-b-icon img { 
+    
+    width: 100%;      
+    height: 115%;     
+    
+   
+    object-fit: cover; 
+    
+    display: block;
+}
+        .nav-icon svg {
+            width: 26px;  
+            height: 26px;
+            display: block;
+        }
+
+        /* ================= 3. Page A 样式 ================= */
+        .page-a-content { 
+            flex: 1; 
+            overflow-y: auto; 
+            min-height: 0;
+            padding-top: 15px; 
+            background-color: white; 
+            background-image: url('./Abk.jpg'); /* 你的A页面背景图 */
+            background-size: cover;      
+            background-position: center; 
+            background-repeat: no-repeat;
+        }
+        .carousel-wrapper { width: 94%; margin: 0 auto; position: relative; }
+        /* 1. 删掉写死的高度 */
+        .banner { 
+            
+            display: flex; 
+            overflow-x: auto; 
+            scroll-snap-type: x mandatory; 
+            border-radius: 12px; 
+        }
+
+        .banner-item { 
+            min-width: 100%; 
+            
+            scroll-snap-align: center; 
+        }
+
+        /* 2. 用 aspect-ratio 控制完美比例 */
+        .banner-item img { 
+            width: 100%; 
+            aspect-ratio: 3/1.2; /* 👈 新增：设置你想展示的宽高比 (比如 21/9, 16/9, 2/1 都可以) */
+            object-fit: cover;    /* 配合 cover，保证图片铺满不留白且不变形 */
+            display: block; 
+        }
+        .banner::-webkit-scrollbar { display: none; }
+
+        .notice-bar { width: 94%; height: 90px; margin: 15px auto; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .notice-bar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+        .oa-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px 10px; padding: 20px 15px; }
+        .oa-item { display: flex; flex-direction: column; align-items: center; font-size: 13px; color: #333; }
+        .oa-icon-img { width: 50px; height: 50px; border-radius: 16px; object-fit: cover; margin-bottom: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+
+        /* ================= 4. Page B 核心结构 ================= */
+        .page-b-wrapper { 
+            flex: 1; display: flex; flex-direction: column; position: relative; min-height: 0; 
+        }
+        
+        /* 1. 顶部蓝色背景 (拉长到 140px 以便包容按钮) */
+        .f1-blue-bg { 
+            width: 100%; height: 140px; background-color: #1350d2; flex-shrink: 0;
+            border-radius: 0 0 25px 25px; position: absolute; top: 0; left: 0; z-index: 1; 
+        }
+       .f1-header-text { 
+            position: relative; 
+            z-index: 2; 
+            text-align: left; /* 🌟 1. 改为左对齐 */
+            padding: 20px 25px 10px 25px; /* 🌟 2. 上 右 下 左。这里的 25px 就是左边距，你可以适当加减这个数值，让文字刚好和第一个按钮的左侧在一条直线上 */
+            color: white; 
+            font-weight: bold; 
+            font-size: 16px; 
+            flex-shrink: 0;
+        }
+
+        /* 2. 导航按钮组 (悬浮在蓝色背景之上) */
+        .sub-nav { 
+            display: flex; justify-content: space-around; padding: 5px 15px 15px 15px; flex-shrink: 0; 
+            position: relative; z-index: 2; 
+        }
+        /* 未选中状态：白底，蓝字 */
+        .sub-nav-item { 
+        padding: 10px 15px;
+        border-radius: 20px;
+        background-color: #e5edff;
+        color: #1351d3;
+        border: 1px solid #ffffff;
+        font-size: 12px;
+        font-weight: normal;
+        cursor: pointer;
+        transition: 0.2s;
+        white-space: nowrap;
+        }
+        /* 选中状态：深蓝底，白字 */
+        .sub-nav-item.active { 
+            background-color: #0035a4; color: #ffffff; border: 1px solid #0035a4; 
+        }
+
+        /* 3. 下方功能卡片 (调整 margin-top 保持与蓝底的交合效果) */
+        .f2-function-container {
+            width: 92%; margin: 0 auto; flex: 1; background-color: var(--ticket-gray);
+            border-radius: 15px 15px 0 0; position: relative; z-index: 10;
+            margin-top: 10px; /* 压在蓝色背景上的高度 */
+            display: flex; flex-direction: column; min-height: 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            padding-top: 15px; /* 卡片顶部内边距 */
+        }
+
+        /* 4. 子页面容器 */
+        .sub-page { 
+            display: none; flex: 1; flex-direction: column; padding: 0 20px 20px 20px; 
+            position: relative; overflow-y: auto; min-height: 0; 
+        }
+        .sub-page.active { display: flex; }
+
+        /* 5. 卡片中间的虚线和半圆缺口 (保留你原本的设计) */
+        .ticket-divider { 
+            position: relative; height: 30px; margin: 10px -20px; display: flex; 
+            align-items: center; flex-shrink: 0;
+        }
+        .ticket-divider-line { 
+            flex: 1; border-top: 2px dashed #ccc; margin: 0 15px; 
+        }
+        .notch { 
+            position: absolute; width: 14px; height: 28px; background-color: var(--bg-gray); top: 1px; 
+        }
+        .notch-left { left: 0; border-radius: 0 28px 28px 0; }
+        .notch-right { right: 0; border-radius: 28px 0 0 28px; }
+
+        /* ================= 5. B1 / B2 / B3 内部组件样式 ================= */
+        .ring-container { display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 15px 0; flex-shrink: 0;}
+        .ring-outer { width: 120px; height: 120px; border-radius: 50%; background: var(--light-blue); display: flex; align-items: center; justify-content: center; }
+        .ring-mid { width: 105px; height: 105px; border-radius: 50%; background: var(--mid-blue); display: flex; align-items: center; justify-content: center; }
+        .ring-inner { width: 90px; height: 90px; border-radius: 50%; background: #1450d2; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 15px rgba(0,123,255,0.4); }
+        .ring-inner img { width: 50px; height: 65px;  }
+        .scan-text { margin-top: 15px; font-weight: bold; text-align: center;color: #b6b6b6; font-size: 15px; }
+
+        .b2-input-wrapper { display: flex; flex-direction: column; align-items: center; width: 100%; margin: 15px 0; flex-shrink: 0; }
+        .b2-input-wrapper input[type=number]::-webkit-inner-spin-button, 
+        .b2-input-wrapper input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        .b2-input-wrapper input[type=number] { -moz-appearance: textfield; }
+        .b2-full-input { width: 100%; padding: 14px 15px; border: 1px solid #ddd; border-radius: 8px; background: #fafafa; outline: none; font-size: 15px; }
+        .b2-full-input::placeholder { color: #bbbbbb; }
+        .b2-oval-btn { width: 85%; margin-top: 20px; padding: 14px; background: #1351d3; color: white; border: none; border-radius: 30px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 12px rgba(0,123,255,0.2); cursor: pointer; }
+
+        .nfc-gif-box { margin-top: 30px; display: flex; flex-direction: column; align-items: center; flex-shrink: 0;}
+        .nfc-gif-box img { width: 300px; height:350px;  object-fit: cover; box-shadow: 0 4px 20px rgba(0,123,255,0.2); }
+
+        #qr-reader-container { position: absolute; top:0; left:0; width: 100%; height: 100%; background: black; z-index: 200; display: none; flex-direction: column; }
+        .close-qr { color: white; text-align: center; padding: 20px; background: #333; cursor: pointer; flex-shrink: 0;}
+
+     
+       
+        /* ================= 6. Page C 完整样式 ================= */
+        .page-c-content { 
+            background-color: white; 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 0; 
+            overflow-y: auto;
+            
+            /* 🌟 背景图在这里，因为上面不膨胀了，现在它能完美透出来了 🌟 */
+            background-image: url('./Abk.jpg');
+            background-size: cover;      
+            background-position: center; 
+            background-repeat: no-repeat;
+        }
+        
+        .profile-header { display: flex; align-items: center; padding: 30px 20px 20px 20px; border-bottom: none; flex-shrink: 0; }
+        .avatar { width: 65px; height: 65px; border-radius: 50%; background: var(--primary-blue); color: white; display: flex; justify-content: center; align-items: center; font-size: 28px; margin-right: 15px; }
+        
+        /* 🌟🌟🌟 静态组合区容器 🌟🌟🌟 */
+        /* 🌟 1. 外层容器：设置 font-size: 0 杀死幽灵空白节点 */
+.c-static-decor-wrapper {
+    width: 100%;
+    margin: 0 0 20px 0;
+    display: flex;
+    flex-direction: column; 
+    flex-shrink: 0; 
+    font-size: 0; /* 核心去缝代码 */
+}
+
+/* 🌟 2. 蓝色背景块：取消底部 padding，防止溢出 */
+/* 🌟 修改这个背景块 */
+.c-gradient-fill {
+    width: 100%;
+    /* 把原来的 linear-gradient 删掉，直接写你的颜色 */
+    background: #0053df; 
+    padding-bottom: 0; 
+    overflow: hidden; 
+}
+
+/* 🌟 3. 头像区域文字：抢救被 font-size: 0 误伤的文字，并清除自带边距 */
+.profile-header {
+    display: flex; 
+    align-items: center; 
+    padding: 30px 20px 20px 20px; 
+    border-bottom: none; 
+    flex-shrink: 0; 
+}
+.profile-header h3 {
+    font-size: 18px; /* 抢救回来的用户名大小 */
+    margin: 0;       /* 顺手干掉 h3 自带的边距，防止撑出缝隙 */
+    padding: 0;
+    line-height: 1.2;
+}
+.profile-header p {
+    margin: 0;       /* 干掉 p 标签自带的边距 */
+    padding: 0;
+    line-height: 1.2;
+}
+
+/* 🌟 4. 下方图片：移动端去缝终极杀招 */
+.c-decor-static-img {
+    width: 100%;
+    height: auto; 
+    display: block; 
+    margin: 0;
+    margin-top: -1px; /* 核心去缝代码：强行向上偏移 1px 盖住缝隙 */
+    padding: 0;
+    object-fit: cover; 
+    vertical-align: top; /* 对齐基线 */
+    border: none;
+}
+        /* 🌟 C 菜单区域 🌟 */
+        .c-menu { display: flex; flex-direction: column; flex-shrink: 0; }
+        .c-menu-item { padding: 16px 20px; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 15px; color: #333; flex-shrink: 0; background: rgba(255,255,255,0.8); }
+        .logout-btn { display: block; width: 85%; margin: 30px auto; padding: 15px; background: var(--primary-blue); color: white; border: none; border-radius: 30px; text-align: center; font-size: 16px; font-weight: bold; flex-shrink: 0;}
+    
+
+
+
+
+
+
+        #pageB3-result {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100dvh;
+    z-index: 2000;
+    
+    /* 👇 删掉原本的 transparent，加上下面这 4 行 👇 */
+    background-image: url('./r2-1.jpg'); /* <--- 在这里填入你的图片名字 */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    /* 👆 修改结束 👆 */
+
+    display: none;
+}
+
+.result-overlay {
+    width: 100%; height: 100%;
+    /* 这里的遮罩也是全透明，如果想让底下稍微变暗一点，可以改成 rgba(0,0,0,0.3) */
+    background: transparent; 
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end; /* 让卡片靠下 */
+    padding-bottom: 12vh;      /* 距离底部的距离：数字越大越靠上，越小越靠下 */
+    position: relative;
+}
+
+.back-btn {
+    position: absolute;
+    top: 20px; left: 20px;
+    color: #333; /* 因为背景透明了，返回按钮字改成深色防止看不清 */
+    font-size: 15px; font-weight: bold;
+    padding: 8px 15px;
+    background: rgba(255,255,255,0.8);
+    border-radius: 20px;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    z-index: 10;
+}
+
+/* I1 外层白色卡片 */
+.info-card-i1 {
+    width: 90%;
+    background-color: #ffffff; /* I1 白色背景 */
+    border-radius: 15px;
+    padding: 10px;
+    position: relative; /* 必须为 relative，印章才能居中 */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    margin: 0 auto 20px auto;
+}
+
+/* 印章精准居中 */
+
+/* 🌟 认证印章（85%大小 + 倾斜盖章效果） 🌟 */
+        .verify-stamp {
+            position: absolute;  
+            /* 如果上下位置有少许偏差，可以微调 top 的百分比，比如 45% 或 55% */
+            top: 50%;            
+            left: 50%;           
+            
+            /* 🌟 核心修改 1：translate 保持居中，rotate 控制倾斜角度 */
+            /* -20deg 表示逆时针稍微倾斜，最像真实的盖章手法，你可以改成 -15deg 或 -25deg 试试 */
+            transform: translate(-50%, -50%) ; 
+            
+            /* 🌟 核心修改 2：宽度占满参照物的 85% */
+            width: 85%;          
+            height: auto;
+            
+            z-index: 999;        
+            opacity: 0.45;       
+            pointer-events: none; 
+        }
+
+/* 顶部蓝色标题 */
+.product-header {
+    text-align: center;
+    margin-bottom: 15px;
+    position: relative;
+    z-index: 10;
+}
+.blue-text-main { color: #007bff; font-size: 18px; font-weight: bold; margin-bottom: 5px; }
+.blue-text-sub { color: #007bff; font-size: 14px; opacity: 0.9; }
+
+/* I2 内部粉白色表格 */
+.info-table-i2 {
+    background-color: #fff9f9; /* I2 背景颜色 */
+    border-radius: 10px;
+    padding: 10px 15px;
+    position: relative;
+    z-index: 10;
+}
+
+/* 浅灰色分割线 */
+.i2-row {
+    display: flex;
+    padding: 10px 0;
+    border-bottom: 1px solid #eeeeee; /* 浅灰色线 */
+}
+.i2-row.no-border { border-bottom: none; }
+
+/* 表头文字 */
+.group-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: #333;
+    padding: 10px 0 5px 0;
+}
+
+/* 蓝色数据字 */
+.blue-data { color: #020101 !important; font-weight: 500; text-align: right; }
+.i2-label { flex: 0.4; color: #666; font-size: 14px; }
+.i2-value { flex: 0.6; font-size: 14px; }
+
+/* 跳转按钮样式 */
+.jump-bar-wrapper { width: 90%; margin: 0 auto; }
+.jump-bar { background-color: #f5d5c5; color: #8b5e3c; padding: 15px 20px; border-radius: 10px; text-align: right; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); cursor: pointer;}
+
+        .table-container { width: 90%; margin: 0 auto 30px auto; }
+        .info-table { color: white; font-size: 15px; text-shadow: 0 1px 3px rgba(0,0,0,0.8); display: flex; flex-direction: column; }
+        .table-row { display: flex; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .table-row.title-row { border-bottom: 2px solid white; }
+        .cell { flex: 1; }
+        .cell.label { flex: 0.4; color: rgba(0, 0, 0, 0.8); } 
+        .cell.value { flex: 0.6; font-weight: 500; }
+        .indent-1 { padding-left: 0.5em; }
+        .indent-2 { padding-left: 1.5em; }
+
+        .jump-bar-wrapper { width: 90%; margin: 0 auto; }
+        .jump-bar { background-color: #f5d5c5; color: #8b5e3c; padding: 15px 20px; border-radius: 10px; text-align: right; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); cursor: pointer;}
+        .pinkbk{ background-color: #fff9f9;}
+        
+        /* ================= 背景悬浮字与选项卡 ================= */
+        .floating-product-title {
+            width: 90%;
+            margin: 0 auto 12px auto;
+            text-align: center;
+            color: white; 
+            text-shadow: 0 2px 6px rgba(0,0,0,0.6); 
+        }
+        .floating-product-title .f-name { color:#174fc0;font-size: 15px; font-weight: 400; margin-bottom: 5px; letter-spacing: 1px; }
+        .floating-product-title .f-spec { color:#174fc0;font-size: 14px; opacity: 0.9; }
+
+        /* 纯文字选项卡，悬浮在背景上 */
+        .floating-tabs {
+            text-align: center;
+            margin-bottom: 15px; /* 选项卡与下方白色卡片的距离 */
+            color: white;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+            font-size: 16px;
+        }
+        .tab-text {
+            cursor: pointer;
+            opacity: 0.7; /* 未选中时稍微透明一点 */
+            transition: 0.3s;
+        }
+        .tab-text.active {
+            opacity: 1; /* 选中时全不透明 */
+            font-weight: bold;
+            color: #ffffff; /* 保持白色，也可以换成 var(--primary-blue) */
+        }
+        .tab-divider {
+            margin: 0 15px; /* | 符号前后的间距 */
+            opacity: 0.5;
+            font-size: 14px;
+        }
+
+        /* ================= 卡片内部排版 ================= */
+        /* 表格标题行 (保留白色背景) */
+        .title-row {
+            padding: 5px 0 10px 0 !important;
+            font-weight: bold;
+            color: #333;
+            border-bottom: none !important; /* 去掉标题下的线，和粉色区块更连贯 */
+        }
+
+        /* 数据行容器 (浅粉色背景，减小留白间距) */
+        .pink-data-block {
+            background-color: #fff9f9;
+            border-radius: 8px;
+            padding: 4px 10px; /* 【核心修改】将原本的内边距减少了50% */
+            position: relative;
+            z-index: 10;
+        }
+
+        /* 数据行排版 */
+        .pink-data-block .table-row {
+            padding: 8px 0; /* 缩小行间距 */
+            border-bottom: 1px solid #eeeeee;
+        }
+        .pink-data-block .table-row.no-border { border-bottom: none; }
+
+        /* 强制蓝色数据字 */
+        .blue-data { color: #020101 !important; font-weight: 600; }
+
+        /* 缩进控制 */
+        .indent-1 { padding-left: 0.5em !important; }
+        .indent-2 { padding-left: 1.5em !important; }
+        
+        .result-tab-content { display: flex; flex-direction: column; }
+        /* ================= 缓冲加载页样式 ================= */
+        #loading-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #f5f6f8; /* 整体背景遮挡 */
+            z-index: 3000; /* 层级最高，盖住所有未加载完的东西 */
+            display: flex; align-items: center; justify-content: center;
+        }
+        .loading-box {
+            background-color: #e8e9ec; /* 浅灰色正方形 */
+            width: 120px; height: 120px;
+            border-radius: 16px; /* 圆角 */
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .spinner {
+            width: 32px; height: 32px;
+            border: 4px solid #d1d4d9;
+            border-top-color: var(--primary-blue); /* 蓝色的加载圈 */
+            border-radius: 50%;
+            animation: spin 1s linear infinite; /* 一直旋转 */
+            margin-bottom: 12px;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .loading-text { font-size: 13px; color: #555; font-weight: bold; }
+
+        /* ================= 错误弹窗样式 ================= */
+        #error-popup {
+        position: fixed; 
+        top: 0; 
+        left: 0; 
+        width: 100vw; 
+        /* 使用 100% 配合 fixed 更有保障 */
+        height: 100%; 
+        background: rgba(0,0,0,0.6); /* 稍微加深遮罩，更有高级感 */
+        
+        /* 🌟 确保 z-index 真的能压过所有 .page 容器 🌟 */
+        z-index: 9999; 
+        
+        /* 默认隐藏 */
+        display: none; 
+        align-items: center; 
+        justify-content: center;
+        
+        /* 防止弹窗弹出时页面还能滚动 */
+        pointer-events: auto; 
+        }
+        .error-box {
+            background: white; width: 75%; border-radius: 16px; padding: 30px 20px;
+            text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            animation: popIn 0.3s ease-out forwards; /* 弹出动画 */
+        }
+        @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        /*.error-icon { font-size: 45px; margin-bottom: 10px; }*/
+        .error-title { font-size: 18px; font-weight: bold; color: #333; margin-bottom: 8px; }
+        .error-btn {
+            background: var(--primary-blue); color: white; padding: 12px 0;
+            border-radius: 25px; font-size: 16px; margin-top: 20px; font-weight: bold; cursor: pointer;
+        }
+
+
+        /* ================= Fic1 详情页样式 ================= */
+        #page-fic1-detail {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
+            background-color: #ffffff;
+            z-index: 5000; /* 层级最高，覆盖所有页面 */
+            display: none; /* 默认隐藏 */
+            flex-direction: column;
+        }
+        
+        /* 顶部 Header */
+        .detail-header {
+            height: 55px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;
+            padding: 0 15px; background-color: white; border-bottom: 1px solid #f0f0f0;
+        }
+        .d-back-btn { font-size: 16px; color: #333; cursor: pointer; font-weight: bold; width: 50px; }
+        .d-header-title { font-size: 17px; font-weight: bold; color: #333; }
+
+        /* 滚动内容区 */
+        .detail-content {
+            flex: 1; overflow-y: auto; padding: 20px 20px 40px 20px;
+        }
+        
+        /* 标题与文字排版规范 */
+        .d-title { font-size: 24px; font-weight: 900; color: #c42026; margin-bottom: 20px; }
+        .d-large-title { font-size: 20px; font-weight: 800; color: #c42026; margin: 30px 0 15px 0; line-height: 1; }
+        /* 1. 主标题样式：修改字号使其类似 h2 大小，默认红色加粗 */
+        .d-sub-title { 
+            font-size: 20px; /* 从 16px 放大到 20px，更接近 h2 */
+            font-weight: bold; 
+            color: #9f3e33; /* 你的红色 */
+            margin: 25px 0 10px 0; 
+        }
+
+        /* 2. 黑色小字样式：用于杏花村 */
+        .text-small-black {
+            font-size: 14px; /* 小字号 */
+            color: #333333;  /* 黑色 */
+            font-weight: normal; /* 取消 h3 继承的加粗，让排版更精致 */
+            margin-left: 8px; /* 和前面的冒号稍微拉开一点间距 */
+        }
+
+        /* 3. 红色小字样式：用于网址 */
+        .text-small-red {
+            font-size: 14px; /* 小字号 */
+            color: #9f3e33;  /* 保持与标题同色，或者换成更亮的红色如 #df2a2d */
+            font-weight: normal; /* 取消加粗 */
+            margin-left: 8px;
+        }
+
+        /* 你原本的段落样式保持不变即可 */
+        .d-text { 
+            font-size: 15px; 
+            color: #666; 
+            line-height: 1.6; 
+            margin-bottom: 20px; 
+            text-align: justify; 
+        }
+        /* 地址框 */
+        .d-address-box {
+            font-size: 14px; color: #444; font-weight: 500; margin-bottom: 15px;
+            background: #f8f9fa; padding: 12px; border-radius: 8px; border: 1px solid #eee;
+        }
+        
+        /* 图片/地图的灰色占位块 */
+        .d-img-placeholder {
+            width: 100%; height: 180px; background-color: #e9ecef; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            color: #adb5bd; font-size: 14px; margin-bottom: 15px;
+        }
+        .d-map-placeholder {
+            width: 100%; height: 160px; background-color: #e2e3e5; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            color: #6c757d; font-size: 16px; font-weight: bold; border: 1px dashed #ced4da;
+        }
+        /* 详情页内部的真实图片样式 */
+        .d-img-content {
+            width: 100%; 
+            border-radius: 12px;     /* 圆角让图片显得更精致 */
+            margin-bottom: 15px;     /* 图片和下方文字的间距 */
+            object-fit: cover;       /* 防止图片被压扁变形 */
+            display: block;
+            background-color: #f0f0f0; /* 如果图片没加载出来，会显示浅灰色底 */
+        }
+
+
+        
+        /* ================= Fic2 流程图与全屏阴影排版 ================= */
+        #page-fic2-detail {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
+            background-color: #f8f9fa; z-index: 5000; display: none; flex-direction: column;
+        }
+        .detail-header {
+            height: 55px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;
+            padding: 0 15px; background-color: white; border-bottom: 1px solid #f0f0f0; z-index: 10;
+        }
+        .fic2-main-content {
+            flex: 1; overflow-y: auto; padding-bottom: 40px;
+        }
+        .fic2-flow-container {
+            display: flex; flex-direction: column; align-items: center; padding: 20px 10px;
+        }
+        
+        /* 流程图图片样式 */
+        .fic2-flow-img {
+            width: 100%; max-width: 340px; border-radius: 12px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            cursor: pointer; transition: transform 0.2s; background: white;
+        }
+        .fic2-flow-img:active { transform: scale(0.98); }
+        
+        /* 🌟 超级粗的实体向下箭头 🌟 */
+        .fic2-arrow {
+            width: 20px; /* 箭头主干的粗细 */
+            height: 25px; /* 箭头主干的高度 */
+            background-color: #c82b1e;
+            position: relative;
+            margin: 10px 0 35px 0; /* 上下间距 */
+        }
+        .fic2-arrow::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            /* 箭头的头部尺寸，极大加粗 */
+            border-left: 30px solid transparent; 
+            border-right: 30px solid transparent;
+            border-top: 30px solid #c82b1e; 
+        }
+
+        /* ================= fic2 ================= */
+        #fic2-fullscreen-modal {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
+            background-color: #000000; /* 纯黑背景，遮挡一切 */
+            z-index: 9999; /* 极高层级 */
+            display: none; 
+        }
+        
+        #fic2-fs-img {
+            width: 100%; height: 100%; 
+            object-fit: contain; /* 保证图片完整显示不被裁切 */
+        }
+        
+        /* 🌟 底部 20% 高度的灰黑色阴影区 🌟 */
+        .fic2-fs-shadow {
+            position: absolute; bottom: 0; left: 0;
+            width: 100%; 
+            height: 20vh; /* 屏幕高度的 20% */
+            background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(20,20,20,0.8) 40%, rgba(10,10,10,0.95) 100%);
+            display: flex; align-items: flex-end; /* 文字靠下对齐 */
+            padding: 25px; box-sizing: border-box; pointer-events: none;
+        }
+        
+        #fic2-fs-text {
+            color: #ffffff; /* 纯白字体 */
+            font-size: 15px; font-weight: 500; text-align: justify;
+            line-height: 1.6; margin: 0; width: 100%;
+        }
+        
+        .fic2-fs-close {
+            position: absolute; top: 40px; right: 20px;
+            color: white; font-size: 32px; 
+            width: 40px; height: 40px; line-height: 36px; text-align: center;
+            background: rgba(255,255,255,0.2); border-radius: 50%; cursor: pointer;
+            z-index: 10;
+        }
+        /* ================= Fic4 详情页样式 ================= */
+        #page-fic4-detail {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
+            background-color: #f4f5f7; z-index: 5000; display: none; flex-direction: column;
+        }
+        .fic4-main-content {
+            flex: 1; overflow-y: auto; background-color: #f4f5f7;
+        }
+        .fic4-container {
+            max-width: 600px; margin: 0 auto; padding: 15px 15px 20px 15px;
+        }
+        .fic4-white-card {
+            background-color: #ffffff; margin-bottom: 15px; padding: 20px 15px; border-radius: 8px;
+        }
+        .fic4-section-title, .fic4-desc-header {
+            font-size: 16px; font-weight: bold; color: #333; margin-bottom: 15px;
+        }
+        
+        /* 选项卡网格与卡片 */
+        .fic4-type-grid { display: flex; 
+    flex-wrap: wrap; 
+    gap: 10px; }
+        .fic4-type-card {
+           /* 核心算法：100% 减去中间的 2 个 10px 空隙，然后均分成 3 份 */
+    width: calc((100% - 20px) / 3); 
+    box-sizing: border-box; /* 防止 padding 撑大盒子 */
+    
+    /* 下面是你原本就有的样式，保持不变 */
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 18px 5px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease-in-out;
+    font-size: 13px; font-weight: bold; text-align: center;
+        }
+        .fic4-type-card svg {
+            width: 28px; height: 28px; margin-bottom: 8px; fill: currentColor; transition: all 0.2s;
+        }
+
+        /* ================= 1. 统一文字为黑/白 ================= */
+        .fic4-type-card {
+            color: #333333; /* 默认文字为深黑色 */
+        }
+        .fic4-type-card.fic4-active {
+            color: #ffffff; /* 选中时文字变白色 */
+        }
+
+        /* ================= 2. 各个卡片的背景色配置 ================= */
+        .fic4-card-1 { background-color: #f0f4ff; }
+        .fic4-card-1.fic4-active { background-color: #1351d3; }
+        
+        .fic4-card-2 { background-color: #fff7ec; }
+        .fic4-card-2.fic4-active { background-color: #ffa518; }
+        
+        .fic4-card-3 { background-color: #eafff9; }
+        .fic4-card-3.fic4-active { background-color: #42d8ab; }
+        
+        .fic4-card-4 { background-color: #ffeeec; 
+    width: 44%; /* 33% 的 1.3 倍多一点，确保长文字刚好放下 */
+    white-space: nowrap; /* 依然保持不换行 */ }
+        .fic4-card-4.fic4-active { background-color: #ff6752; }
+        
+        .fic4-card-5 { background-color: #f6eaff; 
+    }
+        .fic4-card-5.fic4-active { background-color: #ab22f8; }
+
+        /* ================= 3. 保护前 4 个图标的彩色 ================= */
+        /* 单独给前 4 个 SVG 上色，不让它们跟着文字变黑 */
+        .fic4-card-1 svg { color: #1351d3; }
+        .fic4-card-2 svg { color: #ffa518; }
+        .fic4-card-3 svg { color: #42d8ab; }
+        .fic4-card-4 svg { color: #ff6752; }
+        
+        /* 选中时，前 4 个图标跟着文字一起变白 */
+        .fic4-type-card.fic4-active svg { color: #ffffff; }
+
+        /* ================= 4. 第 5 个专属的 SVG 多色交互 ================= */
+        /* 默认状态（未点击时） */
+        .fic4-card-5 .svg-paper { fill: #ab22f8; transition: fill 0.2s; } 
+        .fic4-card-5 .svg-lines { fill: #ffffff; transition: fill 0.2s; } 
+        .fic4-card-5 .svg-pen   { fill: #faf0ff; transition: fill 0.2s; } 
+
+        /* 选中状态（点击后） */
+        .fic4-card-5.fic4-active .svg-paper { fill: #ffffff; } 
+        .fic4-card-5.fic4-active .svg-lines { fill: #1351d3; } 
+        .fic4-card-5.fic4-active .svg-pen   { fill: #faf0ff; }
+        
+        
+        /* 输入区与上传 */
+        .fic4-textarea-box {
+            width: 100%; border: none; outline: none; resize: none; min-height: 80px;
+            font-size: 14px; line-height: 1.5; color: #333;
+        }
+        .fic4-textarea-box::placeholder { color: #bbbbbb; }
+        .fic4-upload-btn {
+            width: 80px; height: 80px; background-color: #f8f8f8; border: 1px dashed #dddddd;
+            display: flex; align-items: center; justify-content: center; font-size: 36px;
+            color: #cccccc; cursor: pointer; margin-top: 10px; border-radius: 4px;
+        }
+
+        /* 联系方式 */
+        .fic4-contact-row {
+            display: flex; align-items: center; padding: 15px 0; border-bottom: 1px solid #f0f0f0;
+        }
+        .fic4-contact-row:last-child { border-bottom: none; }
+        .fic4-contact-label { width: 70px; font-size: 15px; font-weight: bold; color: #000; }
+        .fic4-contact-input { flex: 1; border: none; outline: none; font-size: 15px; color: #333; }
+        .fic4-contact-input::placeholder { color: #cccccc; }
+
+        /* 底部按钮 */
+        .fic4-f5-container {
+            background-color: #ffffff; padding: 15px 20px 25px 20px; box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+        }
+        .fic4-submit-btn {
+            width: 100%; background-color: #1351d3; color: #ffffff; border: none;
+            padding: 14px; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer;
+        }
+        .fic4-submit-btn:active { opacity: 0.8; }
+
+        /* ================= Fic5  ================= */
+        #page-fic5-detail {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
+            background-color: #ffffff; z-index: 5000; display: none; flex-direction: column;
+        }
+        
+        .fic5-content {
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; /* 左右居中 */
+            padding-top: 15vh; /* 距离顶部向下挪动一点，视觉更舒服 */
+            text-align: center; 
+            padding-left: 30px; 
+            padding-right: 30px;
+        }
+        
+        /* 圆形头像样式 */
+        .fic5-avatar {
+            width: 90px; 
+            height: 90px; 
+            border-radius: 50%; /* 变成正圆形 */
+            object-fit: cover;
+            margin-bottom: 25px; /* 与下方标题的间距 */
+            background-color: #f0f0f0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); /* 微微的阴影增加质感 */
+        }
+        
+        /* 标题样式 */
+        .fic5-title {
+            font-size: 22px; 
+            font-weight: 900; 
+            color: #222222; 
+            margin-bottom: 15px; 
+            letter-spacing: 1px;
+        }
+        
+        /* 描述文字样式 */
+        .fic5-desc {
+            font-size: 15px; 
+            color: #666666; 
+            line-height: 1.6;
+        }
+        /* ================= C2 用户协议页样式 ================= */
+        #page-c2-detail {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
+            background-color: #ffffff; z-index: 5000; display: none; flex-direction: column;
+        }
+
+
+
+
+        /* ================= C1 查验记录页样式 ================= */
+        #page-c1-detail {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
+            background-color: #f5f6f8; /* 灰白色大背景 */
+            z-index: 5000; display: none; flex-direction: column;
+        }
+        .log-list-content {
+            flex: 1; overflow-y: auto; padding: 15px;
+        }
+        
+        /* 白色方框容器 */
+        .log-card {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 0 15px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03); /* 极弱的阴影，显得干净 */
+        }
+        
+        /* 上半部分：圆点和型号 */
+        .log-card-top {
+            display: flex;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #eeeeee; /* 灰白色的线分割 */
+        }
+        
+        /* 蓝色圆，中间约30%白点（通过粗边框实现） */
+        .log-blue-dot {
+            width: 18px;
+            height: 18px;
+            background-color: #ffffff;
+            border: 6px solid #1351d3; /* 6px的蓝色边框，内部刚好留下白色核心 */
+            border-radius: 50%;
+            margin-right: 12px;
+            box-sizing: border-box;
+        }
+        
+        .log-model-text {
+            font-size: 18px;
+            color: #333;
+        }
+        
+        /* 下半部分：时间 */
+        .log-card-bottom {
+            padding: 15px 0;
+            color: #333;
+            font-size: 16px;
+        }
+        
+        /* 没有记录时的提示文字 */
+        .empty-log { text-align: center; color: #999; margin-top: 50px; font-size: 14px; }
+
+
+
+        /* ================= 问卷调查页面样式优化 ================= */
+        #page-survey {
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100vw; 
+            /* 使用 100dvh 确保在所有手机浏览器（含工具栏）中都能撑满 */
+            height: 100dvh; 
+            background: url('./wenjuan.jpg') no-repeat top center;
+            background-size: 100% auto;
+            background-color: #fcebeb;
+            z-index: 6000; 
+            display: none; 
+            flex-direction: column;
+            /* 🌟 核心：禁止整个页面滚动，防止背景图被顶上去 */
+            overflow: hidden; 
+        }
+
+        /* 顶部透明推手区域 */
+.survey-header-bg {
+    background: transparent;
+    
+    /* 🌟 修改这里：把 43vh 改小到 25vh (占据屏幕上方 25% 的位置) */
+    /* 如果你觉得太靠上，就改成 30vh；太靠下，就改成 20vh */
+    height: 25vh; 
+    
+    flex-shrink: 0;
+    position: relative;
+}
+
+/* 白色卡片容器 */
+.survey-card {
+    background: white;
+    margin: 0 30.5px 30px 30.5px; 
+    border-radius: 12px;
+    padding: 25px 20px;
+    box-shadow: 0 8px 20px rgba(223, 42, 45, 0.15); 
+    position: relative;
+    
+    /* 🌟 同步修改这里：公式里的减数必须和上面的一致 (25vh) */
+    /* 100dvh - 25vh (推手高度) - 5vh (底部留白) = 70vh (卡片最大高度) */
+    max-height: calc(100dvh - 25vh - 5vh); 
+    
+    overflow-y: auto; 
+    -webkit-overflow-scrolling: touch; 
+}
+
+        /* 隐藏滚动条（可选，让界面更整洁） */
+        .survey-card::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .survey-intro { font-size: 12px; color: #444; line-height: 1.6; margin-bottom: 25px; text-align: justify; }
+        
+        /* 表单每行 */
+        .form-group { display: flex; align-items: center; border-bottom: 1px dashed #f0f0f0; padding: 18px 0; }
+        .form-group label { width: 95px; font-weight: bold; color: #333; display: flex; align-items: center; font-size: 15px; flex-shrink: 0;}
+        
+        /* 红色大圆点 */
+        .red-dot { width: 8px; height: 8px; background-color: #df2a2d; border-radius: 50%; margin-right: 10px; }
+        
+        /* 输入框和下拉菜单规范化 */
+        .form-group input[type="text"], .form-group input[type="tel"], .form-group select {
+            flex: 1; border: none; outline: none; font-size: 14px; color: #333; background: transparent; text-align: right;
+            appearance: none; direction: rtl; /* 让下拉菜单文字靠右 */
+        }
+        .form-group input::placeholder { color: #ccc; }
+        
+        /* 单选框排版 */
+        .radio-group { flex: 1; display: flex; justify-content: flex-end; gap: 30px; }
+        .radio-group label { display: flex; align-items: center; font-weight: normal; font-size: 15px; }
+        .radio-group input[type="radio"] { margin-right: 8px; accent-color: #df2a2d; width: 16px; height: 16px;}
+        
+        /* 提交按钮 */
+        .survey-submit-btn {
+            width: 100%; padding: 15px; background: #df2a2d; color: white; border: none; border-radius: 30px;
+            font-size: 18px; font-weight: bold; margin-top: 40px; cursor: pointer; box-shadow: 0 4px 12px rgba(223, 42, 45, 0.3);
+        }
+
+
+        .scan-btext{color: red;font-size: 9px;}
+
+
+        /* 1. 启动页样式 */
+        #pwa-splash-screen {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: #ffffff;
+            z-index: 999999; /* 确保在最最最上层 */
             display: flex;
             flex-direction: column;
-            gap: 20px;
-            background-color: #f5f5f5;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease;
         }
-        .container {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+
+        /* 2. 动画元素样式 */
+        .loader-wrapper { position: relative; width: 120px; height: 120px; margin-bottom: 20px; }
+        .loader-svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+        .green-dot { fill: #00c853; }
+        .splash-logo { 
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            width: 105px; height: 90px; border-radius: 50%; 
         }
-        button {
-            padding: 15px 20px;
-            font-size: 16px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            width: 100%;
+
+        /* 3. 文字样式 */
+        .splash-text { text-align: center; }
+        .text-main { font-size: 18px; font-weight: bold; color: #333; margin-bottom: 5px; }
+        .text-sub { font-size: 13px; color: #999; }
+
+        /* 4. 主内容初始隐藏，加载完再淡入 */
+        #main-content {
+            opacity: 0;
+            transition: opacity 0.8s ease;
         }
-        button:active {
-            background-color: #0056b3;
+
+        /* 加载完成后的状态 */
+        body.pwa-loaded #main-content {
+            opacity: 1;
         }
-        /* 进度控制台样式 */
-        .console-wrapper {
-            background: #1e1e1e;
-            color: #00ff00;
-            padding: 15px;
-            border-radius: 8px;
-            font-family: monospace;
-            font-size: 14px;
-            height: 300px;
-            overflow-y: auto;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+
+        body.pwa-loaded {
+            overflow: auto !important; /* 加载完允许滚动 */
         }
-        .console-wrapper p {
-            margin: 5px 0;
-            word-wrap: break-word;
-        }
-        .log-error { color: #ff5555; }
-        .log-success { color: #55ff55; }
-        .log-info { color: #aaaaaa; }
+        
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h2>NFC UID 验证系统</h2>
-        <p>请点击下方按钮，并将 NFC 标签靠近手机背面。</p>
-        <button id="scanBtn">开始扫描 NFC</button>
+    
+  <div id="pwa-splash-screen" style="
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    background-color: #ffffff; 
+    z-index: 999999; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center; 
+    /* 🌟 核心修改：从 15vh 加大到 25vh，把整体内容往上顶 */
+    padding-bottom: 25vh; 
+    box-sizing: border-box; 
+    transition: opacity 0.5s ease-out, visibility 0.5s ease-out; 
+    opacity: 1; 
+    visibility: visible;
+">
+    
+    <div style="position: relative; width: 50px; height: 50px; margin-bottom: 10px;">
+        
+        <svg viewBox="0 0 100 100" style="width: 100%; height: 100%; transform: rotate(-90deg);">
+            <circle cx="50" cy="50" r="48" stroke="#f2f2f2" stroke-width="1.5" fill="none" />
+            <circle cx="98" cy="50" r="2.5" fill="#00c853">
+                <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="1.5s" repeatCount="indefinite" />
+            </circle>
+        </svg>
+        
+        <img src="logo.png" alt="Logo" style="
+            position: absolute; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            width: 36px; 
+            height: 36px; 
+            border-radius: 50%; 
+            object-fit: cover; 
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        " />
     </div>
 
-    <!-- 侧边/底部 进度控制台 -->
-    <div class="console-wrapper" id="consoleOutput">
-        <p class="log-info">>> 控制台已初始化，等待操作...</p>
+    <div style="text-align: center; font-family: sans-serif;">
+        <div style="font-size: 12px; font-weight: bold; color: #333333; letter-spacing: 1px;">
+            汾酒防伪
+        </div>
     </div>
+</div>
+    <div id="main-content">
+        
 
-    <script>
-        // 模拟的数据库：允许通过的 UID 列表 (格式通常为冒号分隔的十六进制，例如 "04:A1:B2:C3:D4:E5:F6")
-        const authorizedUIDs = [
-            "04:5A:6B:7C:8D:9E:0F", 
-            "12:34:56:78",
-            // 在实际测试中，你可以先读取一次你的标签 UID，然后把它填到这里
-        ];
+<div class="app-container">
 
-        const scanBtn = document.getElementById('scanBtn');
-        const consoleOutput = document.getElementById('consoleOutput');
 
-        // 自定义控制台输出函数
-        function logToConsole(message, type = 'info') {
-            const p = document.createElement('p');
-            p.textContent = `>> ${message}`;
+
+    <!-- ========== Page A ========== -->
+
+    <div id="pageA" class="page-content active">
+        <div class="page-a-content">
+            <div class="carousel-wrapper">
+                <div class="banner">
+                    <div class="banner-item"><img src="./h1.jpg"></div>
+                    <div class="banner-item"><img src="./hh2.jpg"></div>
+                    <div class="banner-item"><img src="./h3.jpg"></div>
+                </div>
+            </div>
+            <div class="notice-bar" onclick="openSurvey()" style="cursor: pointer;">
+    <img src="./Hb2.jpg">
+</div>
+            <div class="oa-grid">
+                <div class="oa-item" onclick="openFic1Detail()" style="cursor: pointer;">
+    <img src="./fic1.jpg" class="oa-icon-img"><span>企业信息</span>
+</div>
+                <div class="oa-item" onclick="openFic2Detail()" style="cursor: pointer;">
+    <img src="./fic2.jpg" class="oa-icon-img"><span>工艺流程</span>
+</div>
+                <div class="oa-item" onclick="openLogDetail()" style="cursor: pointer;">
+    <img src="./fic3.jpg" class="oa-icon-img"><span>查验记录</span>
+</div>
+
+                <div class="oa-item" onclick="openFic4Detail()" style="cursor: pointer;">
+    <img src="./fic4.jpg" class="oa-icon-img"><span>售后反馈</span>
+</div>
+                <div class="oa-item" onclick="openFic5Detail()" style="cursor: pointer;">
+    <img src="./fic5.jpg" class="oa-icon-img"><span>消费者红包</span>
+</div>
+        </div>
+    </div>
+</div>
+
+    <!-- ========== Page B ========== -->
+    <div id="pageB" class="page-content">
+        <div class="page-b-wrapper">
+            <div class="f1-blue-bg"></div>
+            <div class="f1-header-text">选择防伪验证方式</div>
             
-            if (type === 'error') p.className = 'log-error';
-            else if (type === 'success') p.className = 'log-success';
-            else p.className = 'log-info';
+            
+                <div class="sub-nav">
+                    <div class="sub-nav-item active" onclick="tabB('B1', this)">二维码验证</div>
+                    <div class="sub-nav-item" onclick="tabB('B2', this)">激光码验证</div>
+                    <div class="sub-nav-item" onclick="tabB('B3', this)">NFC验证</div>
+                </div>
 
-            consoleOutput.appendChild(p);
-            // 自动滚动到最底部
-            consoleOutput.scrollTop = consoleOutput.scrollHeight;
-        }
+                    <div class="f2-function-container">
 
-        scanBtn.addEventListener('click', async () => {
-            logToConsole('检查设备是否支持 Web NFC...');
-
-            if (!("NDEFReader" in window)) {
-                logToConsole('此浏览器不支持 Web NFC。请确保使用 Android 上的 Chrome 浏览器，并通过 HTTPS 访问。', 'error');
-                return;
-            }
-
-            try {
-                const ndef = new NDEFReader();
-                logToConsole('请求 NFC 权限并启动扫描...');
-                
-                await ndef.scan();
-                logToConsole('扫描已启动！请将 NFC 标签靠近手机背面。', 'success');
-
-                // 监听读取错误
-                ndef.onreadingerror = (event) => {
-                    logToConsole('读取失败：无法解析该标签，或者靠近时间太短。', 'error');
-                };
-
-                // 监听成功读取事件
-                ndef.onreading = (event) => {
-                    const uid = event.serialNumber; // 获取标签的 UID
+                <!-- B1 扫码页面 -->
+                <div id="subB1" class="sub-page active">
+                    <div id="qr-reader-container">
+                        <div id="qr-reader" style="flex:1;"></div>
+                        <div class="close-qr" onclick="stopScanner()">退出扫描</div>
+                    </div>
                     
-                    if (!uid) {
-                        logToConsole('读取成功，但该标签没有暴露 UID。', 'error');
-                        return;
-                    }
+                    <div class="ring-container">
+                        <div class="ring-outer">
+                            <div class="ring-mid">
+                                <div class="ring-inner" onclick="startScanner()">
+                                    <img src="./scan.jpg">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="scan-text">点击扫描瓶盖或盒盖上的二维码
+                            <br><a class="scan-btext">说明：本小程序支持有瓶盖二维码的盒装产品的组合查验，无瓶盖二维码<br>的盒装产品暂仅支持盒码查验。</a></div>
+                    </div>
 
-                    logToConsole(`检测到标签！获取 UID: [${uid}]`);
+                    <div class="ticket-divider">
+                        <div class="notch notch-left"></div>
+                        <div class="ticket-divider-line"></div>
+                        <div class="notch notch-right"></div>
+                    </div>
 
-                    // 核心逻辑：比对 UID
-                    logToConsole('正在与数据库进行比对...');
-                    if (authorizedUIDs.includes(uid)) {
-                        logToConsole(`验证通过！UID ${uid} 是授权设备。`, 'success');
-                        // 这里可以触发后续的业务逻辑，比如开门、打卡等
-                    } else {
-                        logToConsole(`验证拒绝！未知的 UID：${uid}`, 'error');
-                    }
-                };
+                    <div style="text-align:center; padding-bottom:10px;">
+                        <p style="font-size:12px; color:#999; margin-bottom:10px;">防伪验证样例</p>
+                        <img src="./bb1.png" style="border-radius:8px; width:90%;">
+                    </div>
+                </div>
 
-            } catch (error) {
-                logToConsole(`发生错误: ${error.message}`, 'error');
-                if (error.name === 'NotAllowedError') {
-                    logToConsole('用户拒绝了 NFC 权限。', 'error');
-                }
-            }
-        });
+                <!-- B2 输入页面 -->
+                <div id="subB2" class="sub-page">
+                    <img src="./dot.jpg" style="width:100%; border-radius:10px; flex-shrink:0;">
+                    
+                    <div class="b2-input-wrapper">
+                        <input type="number" id="b2-input" class="b2-full-input" placeholder="请输入第二排完整的激光码">
+                        <button class="b2-oval-btn" onclick="checkB2()">立即查验</button>
+                        <p class="b2-hint-text" style="text-align: center;color: #b6b6b6;;"><br>请输入完整的激光码</p>
+                    </div>
+
+                    <div class="ticket-divider">
+                        <div class="notch notch-left"></div>
+                        <div class="ticket-divider-line"></div>
+                        <div class="notch notch-right"></div>
+                    </div>
+                    <p style="text-align:center; font-size:12px; color:#666; margin-bottom:10px; flex-shrink:0;">防伪验证案例</p>
+                    <img src="./bb2.png" style="width:100%; border-radius:10px; flex-shrink:0; margin-bottom:10px;">
+                </div>
+
+                <!-- B3 感应页面 -->
+                <div id="subB3" class="sub-page">
+                    
+
+<div class="nfc-scan-container" style="display: flex; flex-direction: column; align-items: center; position: relative;">
+    
+    <div class="nfc-animation"></div>
+    
+    <div class="nfc-gif-box">
+        <img src="./bb3.gif" alt="NFC Scan">
+        
+        <!-- 🌟 重点在这里：文字一定要写在 <p> 和 </p> 的中间 🌟 -->
+        <p id="nfc-log" style="text-align:center; margin-top:20px; font-size:14px; color:#111111;">苹果手机暂不支持NFC查验.</p>
+    </div>
+
+    <!-- 🌟 隐藏的秘密按钮 🌟 -->
+    <button onclick="simulateNFCScan('46:48:23:58:01:01:ae:e0')" style="
+        opacity: 0; 
+        position: fixed; /* 改为 fixed 确保它固定在屏幕可视区的右下角 */
+        width: 50px; 
+        height: 50px; 
+        bottom: 20px; 
+        right: 20px; 
+        z-index: 9999; 
+        border: none;
+        cursor: pointer;
+    ">
+        .
+    </button>
+    
+                        
+                    </div>
+                </div>
+            </div>
+            <div style="height: 15px; flex-shrink: 0;"></div>
+        </div>
+    </div>
+
+<div id="pageC" class="page-content">
+        <div class="page-c-content">
+            
+            <div class="c-static-decor-wrapper">
+                <!-- 🌟 渐变蓝色背景块 🌟 -->
+                <div class="c-gradient-fill">
+                    
+                    <!-- 🌟 把头像区域直接“塞进”蓝色背景块里面 🌟 -->
+                    <div class="profile-header">
+                        <div class="avatar"> <!--C头像--></div>
+                        <!-- 文字颜色改成了白色(#fff)和浅灰色(#eee)，防止在蓝底上看不清 -->
+                        <div><h3 style="color:#fff;">用户昵称</h3><p style="color:#eee; font-size:12px;"><!--C-ID--></p></div>
+                    </div>
+                    
+                </div>
+                
+                <!-- 紧接着下方的图片 -->
+                <img src="./ctop2.png" class="c-decor-static-img" alt="装饰图片">
+            </div>
+
+            <div class="c-menu">
+                <div class="c-menu-item" onclick="openLogDetail()" style="cursor: pointer;">
+                    <span style="display:inline-block; width:30px;"></span>查验记录
+                </div>
+
+                <div class="c-menu-item" onclick="openC2Detail()" style="cursor: pointer;">
+                    <span style="display:inline-block; width:30px;"></span>用户协议
+                </div>
+
+                <div class="c-menu-item" onclick="openFic4Detail()" style="cursor: pointer;">
+                    <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" fill="currentColor" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 10px; margin-top: -3px;">
+                        <path d="M143.992471 650.511059v181.458823l180.374588-104.448c24.877176 4.065882 81.408 8.463059 107.64047 8.463059 229.737412 0 384-170.977882 384-372.013176S623.284706 0 432.007529 0C201.938824 0 15.992471 162.966588 15.992471 364.001882c0 116.464941 44.423529 215.341176 128 286.509177z m464.022588-330.511059a47.977412 47.977412 0 1 1 0 95.924706 47.977412 47.977412 0 0 1 0-95.924706z m-192.030118 0a48.007529 48.007529 0 1 1 0 95.984941 48.007529 48.007529 0 0 1 0-95.984941z m-192 0a48.007529 48.007529 0 1 1 0.030118 96.045176 48.007529 48.007529 0 0 1-0.030118-96.045176z m176.00753 479.984941h-95.984942c76.197647 74.511059 164.773647 119.988706 288.015059 119.988706 26.202353 0 51.772235-2.349176 76.649412-6.415059L847.992471 1024v-181.519059c97.28-66.620235 160.015059-170.014118 160.015058-286.479059 0-103.815529-49.904941-197.240471-129.596235-263.559529l1.596235 27.557647c0.271059 26.142118 0 23.762824 0 47.977412 0 255.216941-201.065412 432.007529-480.015058 432.007529z"></path>
+                    </svg>售后反馈
+                </div>
+                
+                <button class="logout-btn" onclick="showCustomPopup('已退出')">退出登录</button>
+            </div>
+        </div>
+    </div>
 
 
 
+
+    
+
+    <!-- ========== 底部导航栏 ========== -->
+   <div class="bottom-nav">
+        <!-- A 页面 -->
+        <div class="nav-item active" onclick="nav('pageA', this)">
+            <span class="nav-icon">
+                <!-- 删除了 width="200" height="200"，并将 fill 改为 currentColor -->
+                <svg t="1775533633604" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1046">
+                    <path d="M985.6 486.4l-448-448c-12.8-6.4-38.4-6.4-51.2 0l-448 448c-6.4 12.8-12.8 44.8 0 51.2 12.8 6.4 38.4 6.4 51.2 0L512 108.8l422.4 428.8c6.4 6.4 19.2 6.4 25.6 6.4 6.4 0 19.2 0 25.6-12.8 12.8-12.8 12.8-32 0-44.8zM832 620.8c-19.2 0-32 12.8-32 32V896h-576v-236.8c0-19.2-12.8-32-32-32s-32 12.8-32 25.6v275.2c0 19.2 12.8 32 32 32h640c19.2 0 32-12.8 32-25.6v-275.2c0-19.2-12.8-38.4-32-38.4z" p-id="1047" fill="currentColor"></path>
+                    <path d="M704 550.4c0-19.2-6.4-32-25.6-38.4-19.2-6.4-38.4 6.4-38.4 25.6-12.8 57.6-64 102.4-128 102.4s-115.2-38.4-128-102.4c-6.4-19.2-19.2-25.6-38.4-25.6-12.8 0-25.6 19.2-25.6 32C339.2 640 422.4 704 512 704s172.8-64 192-153.6z" p-id="1048" fill="currentColor"></path>
+                </svg>
+            </span>
+            <span>首页</span>
+        </div>
+        
+        <!-- B 页面保持不变 -->
+        <div class="nav-item nav-b" onclick="nav('pageB', this)">
+            <div class="nav-b-icon"><img src="./bb13.png"></div><span>查验</span>
+        </div>
+        
+        <!-- C 页面 -->
+        <div class="nav-item" onclick="nav('pageC', this)">
+            <span class="nav-icon">
+                <!-- 删除了 width="200" height="200"，并将 fill 改为 currentColor -->
+                <svg t="1775533702548" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1439">
+                    <path d="M511.943425 600.53946a298.317625 298.317625 0 0 0 212.324303-87.916857 298.261051 298.261051 0 0 0 87.916858-212.324303V0.05714H511.943425A298.3742 298.3742 0 0 0 299.619123 87.973998a298.317625 298.317625 0 0 0-87.916858 212.324302A298.261051 298.261051 0 0 0 299.619123 512.622603a298.317625 298.317625 0 0 0 212.324302 87.916857z m0-529.424679h229.126946v229.126945a229.409818 229.409818 0 0 1-229.126946 229.126945 229.409818 229.409818 0 0 1-229.126945-229.126945 229.409818 229.409818 0 0 1 229.126945-229.126945z" fill="currentColor" p-id="1440"></path>
+                    <path d="M952.659204 755.836612a192.353485 192.353485 0 0 0-48.597542-60.817646 238.461747 238.461747 0 0 0-153.882788-54.028699H273.764552a236.481637 236.481637 0 0 0-167.121234 66.079079A177.021781 177.021781 0 0 0 52.954066 832.495133v22.290375a158.069305 158.069305 0 0 0 59.120409 121.691866 209.325851 209.325851 0 0 0 135.213185 47.522626h529.368105a209.325851 209.325851 0 0 0 135.156611-47.466051 158.069305 158.069305 0 0 0 59.176984-121.748441v-22.290375a169.723663 169.723663 0 0 0-18.330156-76.658521z m-52.784059 98.948896a88.256305 88.256305 0 0 1-33.944733 67.32372 138.38136 138.38136 0 0 1-89.387796 30.776557H247.174511a138.38136 138.38136 0 0 1-89.387796-30.776557 88.19973 88.19973 0 0 1-33.944733-67.267146v-22.346949a105.96414 105.96414 0 0 1 32.926391-75.131008 165.08455 165.08455 0 0 1 116.76988-45.259643h476.414323a137.589316 137.589316 0 0 1 149.696271 120.390651z" fill="currentColor" p-id="1441"></path>
+                </svg>
+            </span>
+            <span>我的</span>
+        </div>
+    </div>
 
 
         
+       <!-- ================= 独立全屏验证结果页 (Page B3 Result) ================= -->
+<div id="pageB3-result">
+    
+    <!-- 缓冲加载页 (默认层级最高，图片加载完后消失) -->
+    <div id="loading-screen">
+        <div class="loading-box">
+            <div class="spinner"></div>
+            <div class="loading-text">正在加载...</div>
+        </div>
+    </div>
 
-        // 前端验证逻辑 (写在你的 HTML <script> 标签里)
+    <div class="result-overlay">
+        
+        <!-- 返回按钮 -->
+        <div class="back-btn" onclick="closePageB3()">&lt; 重新扫描</div>
+        
+        <!-- 悬浮在背景上的产品标题 -->
+        <div class="floating-product-title">
+            <div class="f-name">青花汾酒(53度 20升级版)</div>
+            <div class="f-spec">53%vol/500mL×6盒</div>
+        </div>
+        
+        <!-- 悬浮在背景上的纯文字选项卡 -->
+        <div class="floating-tabs">
+            <span class="tab-text active" onclick="switchResultTab('G1', this)">生产信息</span>
+            <span class="tab-divider">|</span>
+            <span class="tab-text" onclick="switchResultTab('G2', this)">质检报告</span>
+        </div>
+        
+
+
+        <!-- I1 白色底板卡片 -->
+        <div class="info-card-i1">
+
+        <!-- 🌟 把印章放在 i1 🌟 -->
+            
+          <div class="i1" >
+        
+    <img src="./stamp.png" class="verify-stamp" alt="认证盖章">
+    </div>
+
+
+
+
+            <!-- ================= G1 生产信息 ================= -->
+            <div id="result-G1" class="result-tab-content active">
+                <div class="table-row title-row indent-1">
+                    <div class="cell">生产信息</div>
+                </div>
+                <div class="pink-data-block">
+                    <div class="table-row indent-2">
+                        <div class="cell label">生产日期:</div>
+                        <div class="cell value blue-data">2025-06-06</div>
+                    </div>
+                    <div class="table-row indent-2">
+                        <div class="cell label">生产工厂:</div>
+                        <div class="cell value blue-data">汾酒股份成装一分厂</div>
+                    </div>
+                    <div class="table-row indent-2">
+                        <div class="cell label">生产车间:</div>
+                        <div class="cell value blue-data">成四车间</div>
+                    </div>
+                    <div class="table-row indent-2">
+                        <div class="cell label">生产线:</div>
+                        <div class="cell value blue-data">三线</div>
+                    </div>
+                    <div class="table-row indent-2">
+                        <div class="cell label">是否开瓶:</div>
+                        <div class="cell value blue-data">已开瓶</div>
+                    </div>
+                    <div class="table-row indent-2 no-border">
+                        <div class="cell label">验证时间:</div>
+                        <div class="cell value blue-data liveClockText">加载中...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= G2 检测报告 ================= -->
+            <div id="result-G2" class="result-tab-content" style="display: none;">
+                <div class="table-row title-row indent-1">
+                    <div class="cell">质检报告</div>
+                </div>
+                <div class="pink-data-block">
+                    <div class="table-row indent-2">
+                        <div class="cell label">生产日期:</div>
+                        <div class="cell value blue-data">2025-06-06</div>
+                    </div>
+                    <div class="table-row indent-2">
+                        <div class="cell label">酒精度:</div>
+                        <div class="cell value blue-data">53度</div>
+                    </div>
+                    <div class="table-row indent-2">
+                        <div class="cell label">检查结果:</div>
+                        <div class="cell value blue-data">合格</div>
+                    </div>
+                    <div class="table-row indent-2">
+                        <div class="cell label">质检单号:</div>
+                        <div class="cell value blue-data">20250606143019</div>
+                    </div>
+                    <div class="table-row indent-2 no-border">
+                        <div class="cell label">时间:</div>
+                        <div class="cell value blue-data liveClockText">加载中...</div>
+                    </div>
+                </div>
+            </div>
+
+        </div> 
+        
+        <div class="jump-bar-wrapper">
+            <div class="jump-bar" onclick="location.href='https://your-verify-link.com'">
+                点这里跳转验证 &gt;
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<div id="page-fic1-detail">
+    <div class="detail-header">
+        <div class="d-back-btn" onclick="closeFic1Detail()">&lt; 返回</div>
+        <div class="d-header-title">企业信息</div>
+        <div style="width: 50px;"></div> </div>
+    <!--  fic1-->
+    <div class="detail-content">
+        <h1 class="d-title">介绍</h1>
+        
+        <img src="./it1.png" class="d-img-content" alt="介绍图片1">
+        
+        <p class="d-text">山西杏花村汾酒厂股份有限公司(以下简称“山西汾酒”或“公司”)位于山西省汾阳市杏花村,前身杏花村汾酒厂成立于1949年6月。1993年12月,公司经批准改制为股份有限公司,1994年1月在上海证券交易所上市,为山西省第一家上市公司,同时也是中国白酒行业第一股。<br>
+
+公司占地4000余亩,拥有职工7500余人,总资产64余亿元,注册资本86584.83万元,是全国最大的名白酒生产基地之一。公司主营汾酒、竹叶青酒及其系列酒的生产、销售;酒类高新技术及产品研究、开发、生产、应用;投资办企及相关咨询服务;具有饮料酒生产能力4万余吨,2012销售收入达64.78亿元。公司主导产品汾酒、竹叶青酒系列,有1500年的文字记载历史,在国内外享有较高的知名度、美誉度和忠诚度。</p>
+        
+        <img src="./it2.png" class="d-img-content" alt="介绍图片2">
+        
+        <p class="d-text">
+公司所在地山西省杏花村具有得天独厚的酿酒自然条件,拥有丰富清洁的地下水源,拥有独特的区域小气候和上千年培育的微生物体系,周边至少5公里内禁止兴建有污染的企业,是驰名中外的传统历史名酒原产地。</p>
+        
+        <h2 class="d-large-title">生产与工艺理念</h2>
+        
+        <p class="d-text">
+            精心:专心、周密、细心<br>
+            精细:工作做细,管理做细,流程管细<br>
+            精益:求效率、求质量、求品质
+        </p>
+        
+                <h2 class="d-large-title">文化理念</h2>
+        
+        <img src="./it3.png" class="d-img-content" alt="技术参数图">
+        
+        <p class="d-text"> 
+        1.汾酒集团指导思想:创建和谐,凝聚力量,奋起直追,再铸辉煌。<br>
+        2.汾酒集团三步走赶超战略:追赶、超越、领先。<br>
+        3.汾酒集团战略定位:国酒之源、清香之祖、文化之根。<br>
+        4.汾酒集团经营理念:清香汾酒、文化汾酒、绿色汾酒。<br>
+        5.汾酒集团2010年经营方针:夯实基础、创新管理、深度营销、加速发展。<br>
+        6.汾酒集团七大支撑:制度支撑市场支撑文化支撑人才支撑质量支撑资金支撑项目支撑<br>
+        7.不断超越自我和永不满足,是职业生涯持久原动力。<br>
+        8.态度决定行为,行为培养性格,性格决定命运。<br>
+        9.用文化凝聚人心,用制度驾驭人性,用品牌成就人生。</p>
+        
+        <h3 class="d-sub-title">公司地址 <span class="text-small-black">汾阳市杏花村</span></h3>
+
+        <h3 class="d-sub-title">公司网址 <span class="text-small-red">www.fenjiu.com.cn</span></h3>
+           <img src="./map.png" class="d-img-content">
+                    
+                     <br><br><br><br><br><br><br><br>
+                    
+                
+        <!--    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); font-size: 36px; filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.4));">
+                    📍
+                </div>     
+                
+                <div style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.6); color: white; font-size: 11px; padding: 4px 8px; border-radius: 4px;">
+                    点击查看导航 &gt;
+                </div> --> 
+            </a>
+        </div>
+    </div>
+</div>
+
+<!--  fic2-->
+<div id="page-fic2-detail">
+    <div class="detail-header">
+        <div class="d-back-btn" onclick="closeFic2Detail()">&lt; 返回</div>
+        <div class="d-header-title">工艺流程</div>
+        <div style="width: 50px;"></div>
+    </div>
+    
+    <div class="fic2-main-content">
+        <div class="fic2-flow-container">
+            
+            <img src="./art1.png" class="fic2-flow-img" 
+                 onclick="openFic2Fullscreen('./big.jpg', '工艺流程高粱又名红粮,古名稷,是汾酒酿造的重要原料。酿造汾酒主要用当地特产的“一把抓”高粱,这种高粱的特点是颗粒饱满,大小均匀,売少,含淀粉丰富。')">
+            
+            <div class="fic2-arrow"></div>
+            
+            <img src="./art2.png" class="fic2-flow-img" 
+                 onclick="openFic2Fullscreen('./big.jpg', '工艺流程高粱又名红粮,古名稷,是汾酒酿造的重要原料。酿造汾酒主要用当地特产的“一把抓”高粱,这种高粱的特点是颗粒饱满,大小均匀,売少,含淀粉丰富。')">
+                 
+            <div class="fic2-arrow"></div>
+            
+            <img src="./art3.png" class="fic2-flow-img" 
+                 onclick="openFic2Fullscreen('./big.jpg', '工艺流程高粱又名红粮,古名稷,是汾酒酿造的重要原料。酿造汾酒主要用当地特产的“一把抓”高粱,这种高粱的特点是颗粒饱满,大小均匀,売少,含淀粉丰富。')">
+                 
+            <div class="fic2-arrow"></div>
+            
+            <img src="./art4.png" class="fic2-flow-img" 
+                 onclick="openFic2Fullscreen('./big.jpg', '工艺流程高粱又名红粮,古名稷,是汾酒酿造的重要原料。酿造汾酒主要用当地特产的“一把抓”高粱,这种高粱的特点是颗粒饱满,大小均匀,売少,含淀粉丰富。')">
+                 
+            <div class="fic2-arrow"></div>
+            
+            <img src="./art5.png" class="fic2-flow-img" 
+                 onclick="openFic2Fullscreen('./big.jpg', '工艺流程高粱又名红粮,古名稷,是汾酒酿造的重要原料。酿造汾酒主要用当地特产的“一把抓”高粱,这种高粱的特点是颗粒饱满,大小均匀,売少,含淀粉丰富。')">
+                 
+            <div class="fic2-arrow"></div>
+            
+            <img src="./art6.png" class="fic2-flow-img" 
+                 onclick="openFic2Fullscreen('./big.jpg', '工艺流程高粱又名红粮,古名稷,是汾酒酿造的重要原料。酿造汾酒主要用当地特产的“一把抓”高粱,这种高粱的特点是颗粒饱满,大小均匀,売少,含淀粉丰富。')">
+                 
+            <div class="fic2-arrow"></div>
+            
+            <img src="./art7.png" class="fic2-flow-img" 
+                 onclick="openFic2Fullscreen('./big.jpg', '工艺流程高粱又名红粮,古名稷,是汾酒酿造的重要原料。酿造汾酒主要用当地特产的“一把抓”高粱,这种高粱的特点是颗粒饱满,大小均匀,売少,含淀粉丰富。')">
+        </div>
+    </div>
+</div>
+
+<div id="fic2-fullscreen-modal">
+    <div class="fic2-fs-close" onclick="closeFic2Fullscreen()">×</div>
+    
+    <img id="fic2-fs-img" src="" alt="全屏视图">
+    
+    <div class="fic2-fs-shadow">
+        <div id="fic2-fs-text">说明文字加载中...</div>
+    </div>
+</div>
+
+<!--fic4-->
+<div id="page-fic4-detail">
+    <div class="detail-header">
+        <div class="d-back-btn" onclick="closeFic4Detail()">&lt; 返回</div>
+        <div class="d-header-title">问题反馈</div>
+        <div style="width: 50px;"></div>
+    </div>
+    
+    <div class="fic4-main-content">
+        <div class="fic4-container">
+            
+            <div class="fic4-white-card">
+                <div class="fic4-section-title">问题类型</div>
+                <div class="fic4-type-grid">
+                    
+                    <div class="fic4-type-card fic4-card-1 fic4-active" onclick="selectFic4Type(this)">
+                        <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M512 61.44a40.96 40.96 0 0 1 40.96 40.96v122.88a40.96 40.96 0 1 1-81.92 0V102.4a40.96 40.96 0 0 1 40.96-40.96z" fill="currentColor"></path><path d="M737.28 121.79456a40.96 40.96 0 0 1 14.99136 55.95136l-61.44 106.43456a40.96 40.96 0 1 1-70.94272-40.96l61.44-106.43456A40.96 40.96 0 0 1 737.28 121.79456z" fill="currentColor"></path><path d="M902.20544 286.72a40.96 40.96 0 0 1-14.99136 55.95136l-106.43456 61.44a40.96 40.96 0 0 1-40.96-70.94272l106.43456-61.44a40.96 40.96 0 0 1 55.95136 14.99136z" fill="currentColor"></path><path d="M962.56 512a40.96 40.96 0 0 1-40.96 40.96h-122.88a40.96 40.96 0 1 1 0-81.92h122.88a40.96 40.96 0 0 1 40.96 40.96z" fill="currentColor"></path><path d="M902.20544 737.28a40.96 40.96 0 0 1-55.95136 14.99136l-106.43456-61.44a40.96 40.96 0 1 1 40.96-70.94272l106.43456 61.44A40.96 40.96 0 0 1 902.20544 737.28z" fill="currentColor"></path><path d="M737.28 902.20544a40.96 40.96 0 0 1-55.95136-14.99136l-61.44-106.43456a40.96 40.96 0 0 1 70.94272-40.96l61.44 106.43456A40.96 40.96 0 0 1 737.28 902.20544z" fill="currentColor"></path><path d="M512 962.56a40.96 40.96 0 0 1-40.96-40.96v-122.88a40.96 40.96 0 1 1 81.92 0v122.88a40.96 40.96 0 0 1-40.96 40.96z" fill="currentColor"></path><path d="M286.72 902.20544a40.96 40.96 0 0 1-14.99136-55.95136l61.44-106.43456a40.96 40.96 0 1 1 70.94272 40.96l-61.44 106.43456a40.96 40.96 0 0 1-55.95136 14.99136z" fill="currentColor"></path><path d="M121.79456 737.28a40.96 40.96 0 0 1 14.99136-55.95136l106.43456-61.44a40.96 40.96 0 0 1 40.96 70.94272l-106.43456 61.44A40.96 40.96 0 0 1 121.79456 737.28z" fill="currentColor"></path><path d="M61.44 512a40.96 40.96 0 0 1 40.96-40.96h122.88a40.96 40.96 0 1 1 0 81.92H102.4a40.96 40.96 0 0 1-40.96-40.96z" fill="currentColor"></path><path d="M121.79456 286.72a40.96 40.96 0 0 1 55.95136-14.99136l106.43456 61.44a40.96 40.96 0 1 1-40.96 70.94272l-106.43456-61.44A40.96 40.96 0 0 1 121.79456 286.72z" fill="currentColor"></path><path d="M286.72 121.79456a40.96 40.96 0 0 1 55.95136 14.99136l61.44 106.43456a40.96 40.96 0 0 1-70.94272 40.96l-61.44-106.43456A40.96 40.96 0 0 1 286.72 121.79456z" fill="currentColor"></path></svg>卡顿
+                    </div>
+
+                    <div class="fic4-type-card fic4-card-2" onclick="selectFic4Type(this)">
+                        <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M511.488 23.04c-268.8 0-486.4 217.6-486.4 486.4s217.6 486.4 486.4 486.4 486.4-217.6 486.4-486.4-217.6-486.4-486.4-486.4z m0 162.304c35.84 0 65.024 29.184 65.024 65.024l-32.256 356.864H479.232l-32.256-356.864c-0.512-35.84 28.672-65.024 64.512-65.024z m3.072 615.936h-3.072c-35.84-1.024-64-30.208-63.488-66.048s30.208-64 66.048-63.488c35.84 1.024 64 30.208 63.488 66.048-0.512 34.816-28.672 62.976-62.976 63.488z" fill="currentColor"></path></svg>货品损坏
+                    </div>
+
+                    <div class="fic4-type-card fic4-card-3" onclick="selectFic4Type(this)">
+                        <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M512 32C251.4285715625 32 32 251.4285715625 32 512s219.4285715625 480 480 480 480-219.4285715625 480-480-219.4285715625-480-480-480z m205.7142853125 617.142856875c20.5714284375 20.5714284375 20.5714284375 48 0 61.714286249999994-20.5714284375 20.5714284375-48 20.5714284375-61.714285312499996 0l-137.142856875-137.1428578125L374.857143125 717.7142853125c-20.5714284375 20.5714284375-48 20.5714284375-68.5714284375 0s-20.5714284375-54.857143125 0-68.5714284375l144-144-137.1428578125-137.142856875c-20.5714284375-13.714285312500001-20.5714284375-41.142856875 0-61.714285312499996 20.5714284375-20.5714284375 48-20.5714284375 61.714286249999994 0l137.142856875 137.142856875 144-144c20.5714284375-20.5714284375 48-20.5714284375 68.5714284375 0 20.5714284375 20.5714284375 20.5714284375 48 0 68.5714284375L580.5714284375 512l137.142856875 137.142856875z" fill="currentColor"></path></svg>暗码不一致
+                    </div>
+
+                    <div class="fic4-type-card fic4-card-4" onclick="selectFic4Type(this)">
+                        <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M680.063205 69.873394H145.983327v890.132106h791.229563V317.132824L680.063205 69.873394zM398.963039 321.495178l22.775726-23.588231 121.302717 121.302717 120.749108-120.295784 22.491247 22.491247-120.286574 120.286574 120.659057 120.204709-22.773679 23.590278-121.293507-120.840182L421.738765 585.495898l-22.794145-23.608698 120.659057-119.752407L398.963039 321.495178z m241.539149 490.156506H343.790462v-49.453318h296.711726v49.453318z m98.903567-98.903567H343.790462v-49.453319h395.615293v49.453319z" fill="currentColor"></path></svg>信息与实物不一致
+                    </div>
+
+                    <div class="fic4-type-card fic4-card-5" onclick="selectFic4Type(this)">
+                        <svg class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                            <!-- 纸张/外边部分 -->
+                            <path class="svg-paper" d="M810.856471 612.109612l-426.352325 314.309263a103.980569 103.980569 0 0 1-61.684473 20.156234H156.770703C69.874942 946.255169-0.31994 877.659987 0 793.451724V153.123385C-0.31994 68.915121 69.874942 0.383928 156.770703 0h538.01146c86.959749 0.383928 157.154632 68.915121 156.770703 153.123385V532.380511c0 31.290153-15.03719 60.78864-40.696395 79.793089z"></path>
+                            <!-- 旁边那支笔 -->
+                            <path class="svg-pen" d="M951.886116 724.408626l-52.470194-62.836257a35.449375 35.449375 0 0 0-48.502936-5.438984l-303.943201 228.053383a33.785686 33.785686 0 0 0-10.238087 12.477668l-37.880921 78.577316a33.273782 33.273782 0 0 0 4.223211 35.705327 35.193423 35.193423 0 0 0 34.489555 12.157728l96.877896-19.644329a35.385387 35.385387 0 0 0 14.333321-6.398804l297.544397-224.086124a33.465746 33.465746 0 0 0 5.758923-48.37496l-0.191964-0.191964z"></path>
+                            <!-- 内部的两道横线 -->
+                            <path class="svg-lines" d="M566.166198 339.776504H269.389658a49.142816 49.142816 0 0 1-49.910673-48.37496c0-26.747002 22.395815-48.37496 49.910673-48.37496h296.77654c27.514858 0 49.910673 21.627958 49.910673 48.37496 0 26.683014-22.395815 48.310972-49.910673 48.310972z m0 245.330154H269.389658a49.142816 49.142816 0 0 1-49.910673-48.37496c0-26.683014 22.395815-48.310972 49.910673-48.310972h296.77654c27.514858 0 49.910673 21.627958 49.910673 48.310972 0 26.747002-22.395815 48.37496-49.910673 48.37496z"></path>
+                        </svg>使用建议
+                    </div>
+
+                </div>
+            </div>
+
+
+
+            <div class="fic4-white-card">
+                <div class="fic4-desc-header">反馈描述</div>
+                <textarea class="fic4-textarea-box" placeholder="说说您的建议或问题，以便我们提供更好的服务"></textarea>
+                
+                <div class="fic4-upload-btn">+</div>
+            </div>
+
+            <div class="fic4-white-card" style="margin-bottom: 0;">
+                <div class="fic4-section-title">联系方式（必填）</div>
+                
+                <div class="fic4-contact-row">
+                    <div class="fic4-contact-label">姓名:</div>
+                    <input type="text" class="fic4-contact-input" placeholder="请输入您的姓名">
+                </div>
+                
+                <div class="fic4-contact-row">
+                    <div class="fic4-contact-label">手机号:</div>
+                    <input type="tel" class="fic4-contact-input" placeholder="请输入您的手机号">
+                </div>
+            </div>
+        </div>
+        
+        <div class="fic4-f5-container">
+            <button class="fic4-submit-btn" onclick="showCustomPopup('反馈已提交！')">提交</button>
+        </div>
+    </div>
+</div>
+
+<!--fic5-->
+<div id="page-fic5-detail">
+    <div class="detail-header">
+        <div class="d-back-btn" onclick="closeFic5Detail()">&lt; 返回</div>
+        <div class="d-header-title">提示</div>
+        <div style="width: 50px;"></div>
+    </div>
+    
+    <div class="fic5-content">
+        <img src="./err.png" class="fic5-avatar" alt="小程序Logo">
+        
+        <div class="fic5-title">页面不存在</div>
+        
+        <div class="fic5-desc">该页面不存在，你可以进入汾享会员首页获取更多服务</div>
+    </div>
+</div>
+
+
+<!--C2-->
+<div id="page-c2-detail">
+    <div class="detail-header">
+        <div class="d-back-btn" onclick="closeC2Detail()">&lt; 返回</div>
+        <div class="d-header-title">用户协议</div>
+        <div style="width: 50px;"></div>
+    </div>
+    
+    <div class="detail-content">
+        <h1 class="d-title">用户服务协议</h1>
+        <p class="d-text">欢迎您使用本应用。在您使用本应用提供的各项服务之前，请务必仔细阅读并透彻理解本《用户协议》（以下简称“本协议”）。</p>
+        
+        <!--<h3 class="d-sub-title">1. 协议的接受</h3>
+        <p class="d-text">当您点击“同意”或实际开始使用本应用服务时，即表示您已充分阅读、理解并接受本协议的全部内容，本协议即在您与本公司之间产生法律约束力。</p>
+        
+        <h3 class="d-sub-title">2. 服务内容</h3>
+        <p class="d-text">本应用主要为您提供票据感应、真伪验证、产品溯源信息查询等服务。具体服务内容以本应用实际提供的功能为准。</p>
+        
+        <h3 class="d-sub-title">3. 用户行为规范</h3>
+        <p class="d-text">您在使用本服务过程中，应当遵守国家相关法律法规，不得利用本应用从事任何违法犯罪活动，不得上传、发布、传播任何违反法律法规、违背公序良俗的信息。</p>
+        
+        <h3 class="d-sub-title">4. 隐私保护</h3>
+        <p class="d-text">我们非常重视对用户隐私的保护。我们将按照相关法律法规的规定，采取合理措施保护您的个人信息安全，具体细节请参阅我们的《隐私政策》。</p>
+        
+        <h3 class="d-sub-title">5. 免责声明</h3>
+        <p class="d-text">本应用提供的验证结果仅供参考，如因不可抗力、网络延迟、设备故障等原因导致验证服务中断或结果误差，本公司将在法律允许的范围内免除相应责任。</p>
+        
+        <p class="d-text" style="margin-top: 40px; text-align: center; color: #bbb; font-size: 12px;">本协议最终解释权归本公司所有<br>更新日期：2026年4月</p>  -->
+    </div>
+</div>
+
+
+<div id="page-c1-detail">
+    <div class="detail-header">
+        <div class="d-back-btn" onclick="closeLogDetail()">&lt; 返回</div>
+        <div class="d-header-title">查验记录</div>
+        <div style="width: 50px;"></div>
+    </div>
+    
+    <div class="log-list-content" id="log-list-container">
+        </div>
+</div>
+
+
+
+<div id="page-survey">
+    <div class="survey-header-bg">
+        <div class="d-back-btn" onclick="closeSurvey()" style="color: white; padding: 15px;">&lt; 返回</div>
+        </div>
+
+    <div class="survey-card">
+        <p class="survey-intro">尊敬的顾客，您好！值此3.15国际消费者权益日来临之际，为了给您提供更优质的产品与服务，我们诚挚邀请您抽出2分钟时间参与本次匿名调研：</p>
+
+        <form id="surveyForm">
+            <div class="form-group">
+                <label><span class="red-dot"></span>姓名</label>
+                <input type="text" id="s_name" placeholder="请输入姓名">
+            </div>
+            
+            <div class="form-group">
+                <label><span class="red-dot"></span>性别</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="s_gender" value="男"> 男</label>
+                    <label><input type="radio" name="s_gender" value="女"> 女</label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label><span class="red-dot"></span>联系方式</label>
+                <input type="tel" id="s_phone" placeholder="请填写您的联系方式" maxlength="11">
+            </div>
+            
+            <div class="form-group">
+                <label><span class="red-dot"></span>年龄</label>
+                <select id="s_age">
+                    <option value="" disabled selected>请选择您的年龄</option>
+                    <option value="18-25">18-25岁</option>
+                    <option value="26-35">26-35岁</option>
+                    <option value="36-50">36-50岁</option>
+                    <option value="50+">50岁以上</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label><span class="red-dot"></span>学历</label>
+                <select id="s_edu">
+                    <option value="" disabled selected>请选择您的学历</option>
+                    <option value="高中及以下">高中及以下</option>
+                    <option value="大专">大专</option>
+                    <option value="本科">本科</option>
+                    <option value="硕士及以上">硕士及以上</option>
+                    <option value="其他">其他</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label><span class="red-dot"></span>所在城市</label>
+                <select id="s_city">
+                    <option value="" disabled selected>请选择您所在的城市</option>
+                    <option value="北京">北京</option>
+                    <option value="上海">上海</option>
+                    <option value="广州">广州</option>
+                    <option value="深圳">深圳</option>
+                    <option value="其他">其他城市</option>
+                </select>
+            </div>
+            
+            <div class="form-group" style="border-bottom: none;">
+                <label><span class="red-dot"></span>您的职业</label>
+                <select id="s_job">
+                    <option value="" disabled selected>请选择您的所属职业</option>
+                    <option value="学生">学生</option>
+                    <option value="上班族">上班族</option>
+                    <option value="自由职业">自由职业</option>
+                    <option value="其他">其他</option>
+                </select>
+            </div>
+
+            <button type="button" class="survey-submit-btn" onclick="submitSurvey()">立即提交</button>
+        </form>
+    </div>
+</div>
+
+
+<!-- ================= 失败错误弹窗 ================= -->
+<div id="error-popup">
+    <div class="error-box">
+       <!-- <div class="error-icon">⚠️</div>-->
+        <div class="error-title">提示</div>
+        
+        
+        <div id="popup-message" ></div>
+        <div class="error-btn" onclick="closeErrorPopup()">确定</div>
+    </div>
+</div>
+
+
+<div id="pwa-modal" style="display:none; position:fixed; bottom:20px; left:20px; right:20px; background:#fff; padding:20px; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.2); z-index:9999; border:1px solid #eee;">
+    <div style="display:flex; align-items:center;">
+        <img src="/app2.png" style="width:40px; height:40px; border-radius:8px; margin-right:12px;">
+        <div style="flex:1;">
+            <strong style="display:block; font-size:16px;">安装官方查验插件</strong>
+            <span style="font-size:13px; color:#666;">添加到桌面，下次查验更快速</span>
+        </div>
+    </div>
+    <div style="margin-top:15px; display:flex; justify-content:flex-end; gap:10px;">
+        <button id="pwa-close" style="background:none; border:none; color:#999; padding:8px 15px;">稍后再说</button>
+        <button id="pwa-install" style="background:#007bff; border:none; color:#fff; padding:8px 20px; border-radius:6px; font-weight:bold;">立即安装</button>
+    </div>
+</div>
+        </div>
+
+      
+
+<script>
+    const MOCK_DB = { usedQRs: [], validCodes: ["888", "123"] };
+    const TARGET_UID = "46:48:23:58:01:01:ae:e0"; 
+
+    // ===== 1. 导航与选项卡切换 =====
+    function nav(pId, el) {
+        document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById(pId).classList.add('active');
+        el.classList.add('active');
+        if (pId === 'pageB' && document.getElementById('subB3').classList.contains('active')) startNfc();
+    }
+
+    function tabB(id, el) {
+        document.querySelectorAll('.sub-nav-item').forEach(i => i.classList.remove('active'));
+        document.querySelectorAll('.sub-page').forEach(p => p.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById('sub' + id).classList.add('active');
+        if (id === 'B3') startNfc();
+    }
+
+    function switchResultTab(tabId, element) {
+        document.querySelectorAll('.result-tab-content').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.tab-text').forEach(btn => btn.classList.remove('active'));
+        document.getElementById('result-' + tabId).style.display = 'flex';
+        element.classList.add('active');
+    }
+
+    // ===== 2. NFC 读取与校验 =====
+        let nfcRunning = false;
+    async function startNfc() {
+        if (!("NDEFReader" in window) || nfcRunning) {
+            document.getElementById('nfc-log').innerText = "苹果手机暂不支持NFC查验";
+            return;
+        }
+        try {
+            nfcRunning = true;
+            const ndef = new NDEFReader();
+            await ndef.scan();
+           document.getElementById('nfc-log').innerText = "苹果手机暂不支持NFC查验";
+            ndef.onreading = (event) => { checkAndJump(event.serialNumber); };
+        } catch (e) { 
+           nfcRunning = false; 
+            document.getElementById('nfc-log').innerText = "苹果手机暂不支持NFC查验" ;
+        }
+     }
+
+    // 匹配校验逻辑
+    function checkAndJump(uid) {
+        if (uid === TARGET_UID) {
+            showPageB3(); addScanLog('青花汾酒 (53度20升级版)');// UID正确 -> 走加载圈进入结果页
+        } else {
+            showCustomPopup("摄像头启动失败"); // UID错误 -> 弹窗
+        }
+    }
+    
+    // 模拟按钮
+    function simulateNFCScan(uid) {
+        checkAndJump(uid);
+    }
+
+    // 关闭错误弹窗
+    function closeErrorPopup() {
+        document.getElementById('error-popup').style.display = 'none';
+    }
+
+    // ===== 3. 独立结果页逻辑 (含缓冲与秒动时钟) =====
+    let clockInterval = null; 
+
+    function showPageB3() {
+        const page = document.getElementById('pageB3-result');
+        const loader = document.getElementById('loading-screen');
+        
+        if (page) {
+            page.style.display = 'block'; 
+            loader.style.display = 'flex'; // 唤出加载圈
+
+            // 获取背景图预加载
+            const bgUrlMatch = window.getComputedStyle(page).backgroundImage.match(/url\(['"]?(.*?)['"]?\)/);
+            if (bgUrlMatch && bgUrlMatch[1]) {
+                const img = new Image();
+                img.src = bgUrlMatch[1]; 
+                img.onload = () => { setTimeout(() => { loader.style.display = 'none'; }, 500); };
+                img.onerror = () => { loader.style.display = 'none'; };
+            } else {
+                loader.style.display = 'none';
+            }
+        }
+        
+        if (clockInterval) clearInterval(clockInterval); 
+        updateLiveTime(); 
+        clockInterval = setInterval(updateLiveTime, 1000); 
+    }
+
+    function closePageB3() {
+        const page = document.getElementById('pageB3-result');
+        if (page) {
+            page.style.display = 'none'; 
+        }
+        if (clockInterval) clearInterval(clockInterval); 
+        
+        // 重置加载圈状态，确保下次打开还有加载动画
+        const loader = document.getElementById('loading-screen');
+        if(loader) loader.style.display = 'flex'; 
+    }
+
+    // 更新所有的秒动时间
+    function updateLiveTime() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = (now.getMonth() + 1).toString().padStart(2, '0');
+        const day = now.getDate().toString().padStart(2, '0');
+        const hh = now.getHours().toString().padStart(2, '0');
+        const mm = now.getMinutes().toString().padStart(2, '0');
+        const ss = now.getSeconds().toString().padStart(2, '0');
+
+        const fullTimeStr = `${year}-${month}-${day} ${hh}:${mm}:${ss}`;
+        const clocks = document.querySelectorAll('.liveClockText'); 
+        clocks.forEach(clock => { clock.innerText = fullTimeStr; });
+    }
+
+    // ===== 4. 其他组件逻辑 (扫码与B2验证) =====
+    let scanner = null;
+    function startScanner() {
+        document.getElementById('qr-reader-container').style.display = 'flex';
+        if (!scanner) scanner = new Html5Qrcode("qr-reader");
+        scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, 
+        (txt) => {
+            stopScanner();
+            if (MOCK_DB.usedQRs.includes(txt)) showCustomPopup("该二维码已过期！");
+            else { MOCK_DB.usedQRs.push(txt); showCustomPopup("验证成功！"); }
+        }).catch(() => { showCustomPopup("摄像头启动失败");stopScanner(); });
+    }
+    function stopScanner() {
+        document.getElementById('qr-reader-container').style.display = 'none';
+        if (scanner) scanner.stop();
+    }
+
+
+
+ // 🌟 1. 改写后的查验逻辑
+    function checkB2() {
+        const val = document.getElementById('b2-input').value;
+        
+        // 稍微做个判断，如果不输入东西直接点，提示一下
+        if (!val) {
+            showCustomPopup("请输入激光码");
+            return;
+        }
+
+        if (MOCK_DB.validCodes.includes(val)) {
+            showCustomPopup("暂不支持盒装激光码查验");
+        } else {
+            showCustomPopup("暂不支持盒装激光码查验");
+        }
+    }
+
+    // 🌟 2. 呼出自定义弹窗的函数
+    function showCustomPopup(message) {
+        // 把传入的文字塞进弹窗里
+        document.getElementById('popup-message').innerText = message;
+        // 显示弹窗 (用 flex 是为了保持居中对齐)
+        document.getElementById('error-popup').style.display = 'flex'; 
+    }
+
+    // 🌟 3. 关闭自定义弹窗的函数 (你原本 HTML 里绑定的就是这个)
+    function closeErrorPopup() {
+        document.getElementById('error-popup').style.display = 'none';
+    }
+
+
+
+
+
+    // ====== Fic1 详情页开启与关闭逻辑 ======
+    function openFic1Detail() {
+        document.getElementById('page-fic1-detail').style.display = 'flex';
+    }
+    
+    function closeFic1Detail() {
+        document.getElementById('page-fic1-detail').style.display = 'none';
+    }
+   
+    
+   // ====== Fic2  ======
+    
+    function openFic2Detail() {
+        const page = document.getElementById('page-fic2-detail');
+        if(page) page.style.display = 'flex';
+    }
+    function closeFic2Detail() {
+        const page = document.getElementById('page-fic2-detail');
+        if(page) page.style.display = 'none';
+        closeFic2Fullscreen(); // 返回时确保全屏也被关掉
+    }
+    function openFic2Fullscreen(imgSrc, text) {
+        document.getElementById('fic2-fs-img').src = imgSrc;
+        document.getElementById('fic2-fs-text').innerText = text;
+        document.getElementById('fic2-fullscreen-modal').style.display = 'block';
+    }
+    function closeFic2Fullscreen() {
+        document.getElementById('fic2-fullscreen-modal').style.display = 'none';
+    }
+    // ====== 8. Fic4 问题反馈页逻辑 ======
+    function openFic4Detail() {
+        const page = document.getElementById('page-fic4-detail');
+        if(page) page.style.display = 'flex';
+    }
+    
+    function closeFic4Detail() {
+        const page = document.getElementById('page-fic4-detail');
+        if(page) page.style.display = 'none';
+    }
+
+    // Fic4 选项卡单选高亮逻辑
+    function selectFic4Type(clickedElement) {
+        // 找到所有的选项卡并移除激活状态
+        const cards = document.querySelectorAll('.fic4-type-card');
+        cards.forEach(card => card.classList.remove('fic4-active'));
+        // 为当前点击的加上激活状态
+        clickedElement.classList.add('fic4-active');
+    }
+    // ====== 9. Fic5 页面不存在提示页逻辑 ======
+    function openFic5Detail() {
+        const page = document.getElementById('page-fic5-detail');
+        if(page) page.style.display = 'flex';
+    }
+    
+    function closeFic5Detail() {
+        const page = document.getElementById('page-fic5-detail');
+        if(page) page.style.display = 'none';
+    }
+    // ====== 10. C2 用户协议页逻辑 ======
+    function openC2Detail() {
+        const page = document.getElementById('page-c2-detail');
+        if(page) page.style.display = 'flex';
+    }
+    
+    function closeC2Detail() {
+        const page = document.getElementById('page-c2-detail');
+        if(page) page.style.display = 'none';
+    }
+
+
+    // ====== 🌟 新增：页面加载时自动解析 URL 🌟 ======
+    window.addEventListener('DOMContentLoaded', () => {
+        // 获取当前网页链接中的参数
+        const urlParams = new URLSearchParams(window.location.search);
+        const uidFromUrl = urlParams.get('uid'); // 提取 ?uid= 后面的值
+
+        // 如果网址里自带了 uid 参数，直接触发验证并跳到 B3！
+        if (uidFromUrl) {
+            // 延迟一小会儿执行，让页面基础渲染先完成，体验更丝滑
+            setTimeout(() => {
+                checkAndJump(uidFromUrl);
+            }, 300);
+        }
+    });
+
+
+    // ====== 11. C1 查验记录 (Log) 逻辑 ======
+    
+    // 存储历史记录的数组 (预留了一条演示数据)
+    let scanLogData = [];
+
+    // 添加一条新记录的核心函数
+    function addScanLog(modelName) {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = (now.getMonth() + 1).toString().padStart(2, '0');
+        const day = now.getDate().toString().padStart(2, '0');
+        const hh = now.getHours().toString().padStart(2, '0');
+        const mm = now.getMinutes().toString().padStart(2, '0');
+        const ss = now.getSeconds().toString().padStart(2, '0');
+        
+        const timeStr = `${year}-${month}-${day} ${hh}:${mm}:${ss}`;
+        
+        // 将新记录插到数组最前面（最新的在最上）
+        scanLogData.unshift({ model: modelName, time: timeStr });
+    }
+
+    // 渲染记录列表到页面上
+    function renderLogs() {
+        const container = document.getElementById('log-list-container');
+        container.innerHTML = ''; // 清空旧内容
+        
+        if (scanLogData.length === 0) {
+            container.innerHTML = '<div class="empty-log">暂无查验记录</div>';
+            return;
+        }
+        
+        // 遍历数组生成 HTML
+        scanLogData.forEach(log => {
+            const card = document.createElement('div');
+            card.className = 'log-card';
+            card.innerHTML = `
+                <div class="log-card-top">
+                    <div class="log-blue-dot"></div>
+                    <div class="log-model-text">${log.model}</div>
+                </div>
+                <div class="log-card-bottom">
+                    ${log.time}
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+        // 打开记录页
+    function openLogDetail() {
+        renderLogs(); // 打开前先刷新一次数据
+        const page = document.getElementById('page-c1-detail');
+        if(page) page.style.display = 'flex';
+    }
+    
+    // 关闭记录页
+    function closeLogDetail() {
+        const page = document.getElementById('page-c1-detail');
+        if(page) page.style.display = 'none';
+    }
+
+
+    // ====== 12. 问卷调查逻辑与合规验证 ======
+    
+    function openSurvey() {
+        document.getElementById('page-survey').style.display = 'flex';
+    }
+    
+    function closeSurvey() {
+        document.getElementById('page-survey').style.display = 'none';
+    }
+    
+    function submitSurvey() {
+        // 1. 获取所有输入框的值，并去除前后空格
+        const name = document.getElementById('s_name').value.trim();
+        const phone = document.getElementById('s_phone').value.trim();
+        const gender = document.querySelector('input[name="s_gender"]:checked');
+        const age = document.getElementById('s_age').value;
+        const edu = document.getElementById('s_edu').value;
+        const city = document.getElementById('s_city').value;
+        const job = document.getElementById('s_job').value;
+
+        // 2. 判空合规验证
+        if (!name) return showCustomPopup('合规提示：请输入您的姓名');
+        if (!gender) return showCustomPopup('合规提示：请选择您的性别');
+        
+        // 3. 手机号严格正则验证 (验证是否为1开头的11位有效号码)
+        const phoneRegex = /^1[3-9]\d{9}$/;
+        if (!phone) return showCustomPopup('合规提示：请填写联系方式');
+        if (!phoneRegex.test(phone)) {
+            return showCustomPopup('合规提示：手机号格式错误，请输入真实的11位手机号码');
+        }
+        
+        // 4. 其他必选项验证
+        if (!age) return showCustomPopup('合规提示：请选择您的年龄');
+        if (!edu) return showCustomPopup('合规提示：请选择您的学历');
+        if (!city) return showCustomPopup('合规提示：请选择您所在的城市');
+        if (!job) return showCustomPopup('合规提示：请选择您的职业');
+
+        // 5. 全部合规，执行提交逻辑
+        showCustomPopup('提交成功！感谢您抽出宝贵的时间参与调研。');
+        closeSurvey();
+        
+        // 提交后自动清空表单，方便下次测试
+        document.getElementById('surveyForm').reset();
+    }
+
+    
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .then(registration => {
+                console.log('SW 注册成功:', registration);
+                })
+                .catch(err => {
+                console.log('SW 注册失败:', err);
+                });
+            });
+        }
+
+        let deferredPrompt;
+
+// 1. 监听 PWA 就绪信号
+window.addEventListener('beforeinstallprompt', (e) => {
+    // 阻止浏览器默认的、丑陋的底部横幅
+    e.preventDefault();
+    // 暂存事件
+    deferredPrompt = e;
+    
+    // 【关键】显示你刚才写的那个漂亮弹窗
+    const modal = document.getElementById('pwa-modal');
+    if (modal) {
+        // 延迟 2 秒显示，给用户一点缓冲，体验更好
+        setTimeout(() => {
+            modal.style.display = 'block';
+        }, 2000);
+    }
+    
+    console.log('PWA 就绪：已弹出自定义引导弹窗');
+});
+
+// 2. 处理“立即安装”按钮点击
+document.getElementById('pwa-install').addEventListener('click', async () => {
+    const modal = document.getElementById('pwa-modal');
+    if (deferredPrompt) {
+        // 触发浏览器真正的安装询问框
+        deferredPrompt.prompt();
+        
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`用户安装选择: ${outcome}`);
+        
+        deferredPrompt = null;
+        modal.style.display = 'none';
+    }
+});
+
+// 3. 处理“稍后再说”按钮点击
+document.getElementById('pwa-close').addEventListener('click', () => {
+    document.getElementById('pwa-modal').style.display = 'none';
+});
+
+
+
+    window.addEventListener('load', function() {
+        const splash = document.getElementById('pwa-splash-screen');
+        const body = document.body;
+
+        // 给一秒钟的展示时间，防止页面加载过快导致动画一闪而过
+        setTimeout(() => {
+            if (splash) {
+                // 1. 让启动页淡出
+                splash.style.opacity = '0';
+                
+                // 2. 让主内容淡入
+                body.classList.add('pwa-loaded');
+
+                // 3. 动画结束后彻底移除启动页，不占内存
+                setTimeout(() => {
+                    splash.remove();
+                }, 1800);
+            }
+        }, 500); 
+    });
+
+
+
+
+
+
+
+
+
+
+    // 前端验证逻辑 (写在你的 HTML <script> 标签里)
 async function verifyNfcTag() {
     // 1. 从浏览器地址栏获取 token 
     // 比如用户扫 NFC 打开了: https://你的域名.com/?token=A1B2C3D4...
@@ -187,6 +2332,8 @@ async function verifyNfcTag() {
 
 // 页面加载完毕时自动执行
 window.onload = verifyNfcTag;
-    </script>
+
+
+</script>
 </body>
 </html>
