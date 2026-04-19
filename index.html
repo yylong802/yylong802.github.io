@@ -2353,6 +2353,34 @@ document.getElementById('pwa-close').addEventListener('click', () => {
 
 
 
+    // ====== 🌟 解决 NFC 重复扫码（切回前台）不刷新问题 🌟 ======
+    let lastHiddenTime = 0;
+
+    document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+            // 状态 1：当浏览器被切到后台、切换了标签页、或者手机熄屏时，记录当前时间戳
+            lastHiddenTime = Date.now();
+        } else {
+            // 状态 2：当浏览器重新回到前台（例如用户再次碰了 NFC 唤醒了浏览器）
+            if (lastHiddenTime > 0) {
+                const hiddenDuration = Date.now() - lastHiddenTime;
+                
+                // 如果页面在后台停留超过 1000毫秒 (1秒)，说明这是一次新的扫码唤醒
+                if (hiddenDuration > 1000) {
+                    
+                    // 偷偷把加载圈放出来，让刷新过程更自然，不会闪瞎眼
+                    const loader = document.getElementById('loading-screen');
+                    if (loader) loader.style.display = 'flex';
+                    
+                    // 强制刷新当前网页！这样所有的检测逻辑都会重新干净地跑一遍
+                    window.location.reload();
+                }
+            }
+        }
+    });
+
+
+
 
 </script>
 </body>
