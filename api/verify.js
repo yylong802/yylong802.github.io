@@ -37,8 +37,7 @@ function decryptToken(token) {
 }
 
 // ==========================================
-// 3. 核心 API 接口逻辑
-// 当你的网页发起请求 (例如: /api/verify?token=XYZ...) 时触发
+// 3. 核心 API 接口逻辑 (支持 Token 解密 与 UID 明文 双轨制)
 // ==========================================
 module.exports = async function handler(req, res) {
     // 允许跨域请求 (CORS) - 保证前端 PWA 能够正常调用
@@ -50,26 +49,31 @@ module.exports = async function handler(req, res) {
         return res.status(200).end();
     }
 
-    const { token } = req.query;
+    // 🌟 修复点：在这里一次性提取 token 和 uid，绝不重复声明
+    const { token, uid } = req.query;
+    let realUid = null;
 
-    if (!token) {
+    // --- Step 1: 识别并处理参数 (双轨制) ---
+    if (token) {
+        // 路线 A：如果是 token 进来，走加密解密流程 (例如扫二维码)
+        realUid = decryptToken(token);
+        if (!realUid) {
+            await logVerification('Unknown', 'Fail', '解密失败：非法伪造的NFC标签');
+            return res.status(403).json({ valid: false, message: '非法标签，请谨防假冒！' });
+        }
+    } else if (uid) {
+        // 路线 B：如果是 uid 进来，直接使用明文 (例如安卓 NFC 贴贴)
+        realUid = uid; 
+    } else {
+        // 路线 C：什么都没传，直接拦截
         return res.status(400).json({ valid: false, message: '缺少验证参数' });
-    }
-
-    // --- Step 1: 解密 Token ---
-    const realUid = decryptToken(token);
-    
-    if (!realUid) {
-        // 解密失败，说明 token 被篡改或伪造
-        await logVerification('Unknown', 'Fail', '解密失败：非法伪造的NFC标签');
-        return res.status(403).json({ valid: false, message: '非法标签，请谨防假冒！' });
     }
 
     try {
         // --- Step 2: 去数据库查询该 UID 是否存在且合法 ---
         const { data: product, error } = await supabase
             .from('product_whitelist')
-            .select('*') // 使用 * 确保返回所有字段 (用于对接 G1 和 G2)
+            .select('*') // 使用 * 确保返回所有字段
             .eq('uid', realUid)
             .single();
 
@@ -88,21 +92,21 @@ module.exports = async function handler(req, res) {
         // --- Step 3: 一切正常，记录成功查验日志 ---
         await logVerification(realUid, 'Success', '查验通过');
         
-        // --- Step 4: 返回完整正品信息 (完美对接前端 G1 生产信息 与 G2 质检报告) ---
+        // --- Step 4: 返回完整正品信息 ---
         return res.status(200).json({
             valid: true,
             message: '验证通过，确认为正品',
             product: {
-                name: product.product_name,        // 产品名称
-                batch: product.batch_number,       // 批次号
-                date: product.production_date,     // 生产日期
-                factory: product.factory,          // 生产工厂
-                workshop: product.workshop,        // 生产车间
-                line: product.production_line,     // 生产线
-                isOpened: product.is_opened,       // 是否开瓶
-                alcohol: product.alcohol_content,   // 酒精度
-                inspectResult: product.inspection_result, // 质检结果
-                inspectId: product.inspection_id    // 质检单号
+                name: product.product_name,        
+                batch: product.batch_number,       
+                date: product.production_date,     
+                factory: product.factory,          
+                workshop: product.workshop,        
+                line: product.production_line,     
+                isOpened: product.is_opened,       
+                alcohol: product.alcohol_content,   
+                inspectResult: product.inspection_result, 
+                inspectId: product.inspection_id    
             }
         });
 
@@ -111,21 +115,3 @@ module.exports = async function handler(req, res) {
         return res.status(500).json({ valid: false, message: '系统繁忙，请稍后再试' });
     }
 };
-
-// ==========================================
-// 辅助函数：写入查验日志 (用于后台审计)
-// ==========================================
-async function logVerification(uid, status, reason) {
-    try {
-        await supabase.from('check_logs').insert([
-            { 
-                target_uid: uid, 
-                check_type: 'NFC', 
-                result: status,
-                notes: reason 
-            }
-        ]);
-    } catch (logError) {
-        console.error("日志写入失败:", logError.message);
-    }
-}
