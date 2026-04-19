@@ -1857,8 +1857,81 @@
         element.classList.add('active');
     }
 
-    // ===== 2. NFC 读取与校验 =====
-        let nfcRunning = false;
+
+
+    // ==========================================
+    // 1. 核心：双轨制对接后端并填充数据
+    // ==========================================
+    async function checkAndJump(type, value) {
+        const pageB3 = document.getElementById('pageB3-result');
+        const loader = document.getElementById('loading-screen');
+        
+        // 先展示结果页的背景和加载动画
+        if (pageB3) pageB3.style.display = 'block';
+        if (loader) loader.style.display = 'flex';
+
+        try {
+            // 根据类型动态拼接 API 路径：/api/verify?token=... 或 /api/verify?uid=...
+            const apiUrl = (type === 'token') 
+                ? `/api/verify?token=${value}` 
+                : `/api/verify?uid=${value}`;
+
+            const response = await fetch(apiUrl);
+            const result = await response.json();
+
+            if (result.valid) {
+                const p = result.product; 
+
+                // 🌟 数据对接：填充 G1 生产信息
+                document.getElementById('g1-date').innerText = p.date || "2025-06-06";
+                document.getElementById('g1-factory').innerText = p.factory || "汾酒股份成装一分厂";
+                document.getElementById('g1-workshop').innerText = p.workshop || "成四车间";
+                document.getElementById('g1-line').innerText = p.line || "三线";
+                document.getElementById('g1-status').innerText = p.isOpened ? "已开瓶" : "未开瓶";
+                document.getElementById('g1-status').style.color = p.isOpened ? "red" : "#020101";
+
+                // 🌟 数据对接：填充 G2 质检信息
+                document.getElementById('g2-date').innerText = p.date || "2025-06-06";
+                document.getElementById('g2-alcohol').innerText = p.alcohol || "53度";
+                document.getElementById('g2-result').innerText = p.inspectResult || "合格";
+                document.getElementById('g2-id').innerText = p.inspectId || "20250606143019";
+
+                // 填充顶部产品名称
+                const titleEl = document.querySelector('.f-name');
+                if (titleEl) titleEl.innerText = p.name;
+
+                // 记录查验日志
+                addScanLog(p.name);
+
+                // 400ms 缓冲后关闭加载圈，让数据显现
+                setTimeout(() => {
+                    if (loader) loader.style.display = 'none';
+                    // 启动结果页时钟
+                    if (clockInterval) clearInterval(clockInterval); 
+                    updateLiveTime(); 
+                    clockInterval = setInterval(updateLiveTime, 1000);
+                }, 400);
+
+            } else {
+                // 验证失败处理
+                if (loader) loader.style.display = 'none';
+                if (pageB3) pageB3.style.display = 'none';
+                showCustomPopup(result.message || "查验失败，疑似伪造！");
+            }
+        } catch (error) {
+            console.error("API请求失败:", error);
+            if (loader) loader.style.display = 'none';
+            if (pageB3) pageB3.style.display = 'none';
+            showCustomPopup("网络连接失败，请检查网络后重试");
+        }
+    }
+
+    // 2. 模拟/手动触发验证 (也要带上类型)
+    function simulateNFCScan(uid) {
+        checkAndJump('uid', uid);
+    }
+
+    // 3. 修改安卓 NFC 监听部分
     async function startNfc() {
         if (!("NDEFReader" in window) || nfcRunning) {
             document.getElementById('nfc-log').innerText = "苹果手机暂不支持NFC查验";
@@ -1868,27 +1941,34 @@
             nfcRunning = true;
             const ndef = new NDEFReader();
             await ndef.scan();
-           document.getElementById('nfc-log').innerText = "苹果手机暂不支持NFC查验";
-            ndef.onreading = (event) => { checkAndJump(event.serialNumber); };
+            document.getElementById('nfc-log').innerText = "苹果手机暂不支持NFC查验";
+            ndef.onreading = (event) => { 
+                checkAndJump('uid', event.serialNumber); // 这里读取的是物理 UID
+            };
         } catch (e) { 
-           nfcRunning = false; 
-            document.getElementById('nfc-log').innerText = "苹果手机暂不支持NFC查验" ;
+            nfcRunning = false; 
+            document.getElementById('nfc-log').innerText = "苹果手机暂不支持NFC查验";
         }
-     }
+    }
 
-    // 匹配校验逻辑
-    function checkAndJump(uid) {
-        if (uid === TARGET_UID) {
-            showPageB3(); addScanLog('青花汾酒 (53度20升级版)');// UID正确 -> 走加载圈进入结果页
-        } else {
-            showCustomPopup("摄像头启动失败"); // UID错误 -> 弹窗
+    // ====== 🌟 核心：页面加载时自动解析 URL (支持 token 或 uid) 🌟 ======
+    window.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const tokenFromUrl = urlParams.get('token'); 
+        const uidFromUrl = urlParams.get('uid');     
+
+        if (tokenFromUrl) {
+            // 扫码进入：优先处理加密 token
+            setTimeout(() => { checkAndJump('token', tokenFromUrl); }, 300);
+        } else if (uidFromUrl) {
+            // 链接进入：处理明文 uid
+            setTimeout(() => { checkAndJump('uid', uidFromUrl); }, 300);
         }
-    }
-    
-    // 模拟按钮
-    function simulateNFCScan(uid) {
-        checkAndJump(uid);
-    }
+    });
+
+  
+
+
 
     // 关闭错误弹窗
     function closeErrorPopup() {
@@ -2073,21 +2153,7 @@
     }
 
 
-    // ====== 🌟 新增：页面加载时自动解析 URL 🌟 ======
-    window.addEventListener('DOMContentLoaded', () => {
-        // 获取当前网页链接中的参数
-        const urlParams = new URLSearchParams(window.location.search);
-        const uidFromUrl = urlParams.get('uid'); // 提取 ?uid= 后面的值
-
-        // 如果网址里自带了 uid 参数，直接触发验证并跳到 B3！
-        if (uidFromUrl) {
-            // 延迟一小会儿执行，让页面基础渲染先完成，体验更丝滑
-            setTimeout(() => {
-                checkAndJump(uidFromUrl);
-            }, 300);
-        }
-    });
-
+   
 
     // ====== 11. C1 查验记录 (Log) 逻辑 ======
     
@@ -2276,31 +2342,6 @@ document.getElementById('pwa-close').addEventListener('click', () => {
 
 
 
-// 在 verifyNfcTag 的 result.valid 判断内部
-if (result.valid) {
-    const p = result.product;
-
-    // 填充 G1 信息
-    document.getElementById('g1-date').innerText = p.date;
-    document.getElementById('g1-factory').innerText = p.factory;
-    document.getElementById('g1-workshop').innerText = p.workshop;
-    document.getElementById('g1-line').innerText = p.line;
-    document.getElementById('g1-status').innerText = p.isOpened ? "已开瓶" : "未开瓶";
-    document.getElementById('g1-status').style.color = p.isOpened ? "red" : "#020101";
-
-    // 填充 G2 信息
-    document.getElementById('g2-date').innerText = p.date;
-    document.getElementById('g2-alcohol').innerText = p.alcohol;
-    document.getElementById('g2-result').innerText = p.inspectResult;
-    document.getElementById('g2-id').innerText = p.inspectId;
-
-    // 填充顶部产品名称
-    const titleEl = document.querySelector('.f-name');
-    if (titleEl) titleEl.innerText = p.name;
-
-    // 切换到结果页
-    showPageB3();
-}
 
 
 
