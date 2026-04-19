@@ -1084,24 +1084,6 @@
         body.pwa-loaded {
             overflow: auto !important; /* 加载完允许滚动 */
         }
-
-
-        /* 给小绿点专门写一个旋转动画，强制开启 GPU 加速 */
-        .gpu-spin-dot {
-            /* 这里的 50px 50px 是你 SVG 视图的中心点 cx="50" cy="50" */
-            transform-origin: 50px 50px; 
-            animation: smoothSpin 1.5s linear infinite;
-            /* 强制使用 3D 渲染，呼叫显卡支援，防卡顿神器 */
-            will-change: transform; 
-        }
-
-        @keyframes smoothSpin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-
-
         
     </style>
 </head>
@@ -1132,7 +1114,9 @@
         
         <svg viewBox="0 0 100 100" style="width: 100%; height: 100%; transform: rotate(-90deg);">
             <circle cx="50" cy="50" r="48" stroke="#f2f2f2" stroke-width="1.5" fill="none" />
-            <circle class="gpu-spin-dot" cx="98" cy="50" r="2.5" fill="#00c853"></circle>
+            <circle cx="98" cy="50" r="2.5" fill="#00c853">
+                <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="1.5s" repeatCount="indefinite" />
+            </circle>
         </svg>
         
         <img src="logo.png" alt="Logo" style="
@@ -1929,64 +1913,56 @@
         document.getElementById('error-popup').style.display = 'none';
     }
 
- // ===== 3. 独立结果页逻辑 (含缓冲与秒动时钟) =====
-let clockInterval = null; 
+    // ===== 3. 独立结果页逻辑 (含缓冲与秒动时钟) =====
+    let clockInterval = null; 
 
-function showPageB3() {
-    const page = document.getElementById('pageB3-result');
-    
-    // 🌟 核心修改：把你的【两个】加载层都抓出来！
-    const splashScreen = document.getElementById('pwa-splash-screen'); // 第一个：大白屏+绿圈
-    const progressBar = document.getElementById('loading-screen');     // 第二个：进度条
-    
-    // 打开前，重置状态
-    document.body.classList.remove('pwa-loaded'); 
+    function showPageB3() {
+        // 1. 打开前，先把底下的扫码页藏起来
+        const subB3Page = document.getElementById('subB3');
+        if (subB3Page) subB3Page.style.display = 'none';
 
-    if (page) {
-        page.style.display = 'block'; 
+        const page = document.getElementById('pageB3-result');
+        const loader = document.getElementById('loading-screen'); // 只需要管这个灰色进度条就行了
         
-        // 如果它们存在，就让它们显示出来
-        if (splashScreen) splashScreen.style.display = 'flex'; 
-        if (progressBar) progressBar.style.display = 'flex'; 
+        if (page) {
+            page.style.display = 'block'; 
+            if (loader) loader.style.display = 'flex'; // 唤出灰色加载圈
 
-        // 🌟 核心：无视网络，400毫秒后强行秒开！
-        setTimeout(() => {
-            // 时间一到，把这俩加载层统统撤掉！
-            if (splashScreen) splashScreen.style.display = 'none'; 
-            if (progressBar) progressBar.style.display = 'none'; 
-            
-            // 撤掉遮罩的瞬间，触发 0.8s 淡入动画
+            // 🌟 核心：无视图片和网络，固定 400 毫秒后强行秒开结果！
             setTimeout(() => {
-                document.body.classList.add('pwa-loaded'); 
-            }, 20); 
-            
-        }, 400); // 这里的 400ms 也就是 0.4 秒，你可以随意调整
+                if (loader) loader.style.display = 'none'; 
+            }, 400);
+        }
+        
+        if (clockInterval) clearInterval(clockInterval); 
+        updateLiveTime(); 
+        clockInterval = setInterval(updateLiveTime, 1000); 
     }
-    
-    // 时钟逻辑保持不变
-    if (clockInterval) clearInterval(clockInterval); 
-    updateLiveTime(); 
-    clockInterval = setInterval(updateLiveTime, 1000); 
-}
 
+    function closePageB3() {
+        // 1. 关闭结果页
+        const page = document.getElementById('pageB3-result');
+        if (page) page.style.display = 'none'; 
+        
+        if (clockInterval) clearInterval(clockInterval); 
+        
+        // 2. 隐藏加载圈，防止下次莫名其妙闪烁
+        const loader = document.getElementById('loading-screen');
+        if (loader) loader.style.display = 'none'; 
 
+        // 3. 🌟 重新唤醒你的扫码主页面
+        const subB3Page = document.getElementById('subB3');
+        if (subB3Page) {
+            subB3Page.style.display = 'flex'; 
+        }
 
-
-function closePageB3() {
-    const page = document.getElementById('pageB3-result');
-    if (page) {
-        page.style.display = 'none'; 
+        // 4. 重置扫码页的提示文字，准备下一次扫码
+        const nfcLog = document.getElementById('nfc-log');
+        if (nfcLog) {
+            nfcLog.innerText = '苹果手机暂不支持NFC查验'; 
+            nfcLog.style.color = '#111111'; 
+        }
     }
-    if (clockInterval) clearInterval(clockInterval); 
-    
-    document.body.classList.remove('pwa-loaded'); 
-    
-    // 🌟 关闭时，把两个加载层都重置回显示状态，等下次打开再用
-    const splashScreen = document.getElementById('pwa-splash-screen');
-    const progressBar = document.getElementById('loading-screen');
-    if(splashScreen) splashScreen.style.display = 'flex'; 
-    if(progressBar) progressBar.style.display = 'flex'; 
-}
 
     // 更新所有的秒动时间
     function updateLiveTime() {
@@ -2329,16 +2305,10 @@ document.getElementById('pwa-close').addEventListener('click', () => {
 
 
 
-
-
-
-
-
-
-    // 前端验证逻辑 (写在你的 HTML <script> 标签里)
+    // 前端验证逻辑 
 async function verifyNfcTag() {
     // 1. 从浏览器地址栏获取 token 
-    // 比如用户扫 NFC 打开了: https://你的域名.com/?token=A1B2C3D4...
+    //  NFC 打开: https://domain.com/?token=A1B2C3D4...
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token');
 
@@ -2367,6 +2337,8 @@ async function verifyNfcTag() {
 
 // 页面加载完毕时自动执行
 window.onload = verifyNfcTag;
+
+
 
 
 </script>
