@@ -1917,21 +1917,23 @@
     let clockInterval = null; 
 
     function showPageB3() {
-        // 1. 打开前，先把底下的扫码页藏起来
-        const subB3Page = document.getElementById('subB3');
-        if (subB3Page) subB3Page.style.display = 'none';
-
         const page = document.getElementById('pageB3-result');
-        const loader = document.getElementById('loading-screen'); // 只需要管这个灰色进度条就行了
+        const loader = document.getElementById('loading-screen');
         
         if (page) {
             page.style.display = 'block'; 
-            if (loader) loader.style.display = 'flex'; // 唤出灰色加载圈
+            loader.style.display = 'flex'; // 唤出加载圈
 
-            // 🌟 核心：无视图片和网络，固定 400 毫秒后强行秒开结果！
-            setTimeout(() => {
-                if (loader) loader.style.display = 'none'; 
-            }, 400);
+            // 获取背景图预加载
+            const bgUrlMatch = window.getComputedStyle(page).backgroundImage.match(/url\(['"]?(.*?)['"]?\)/);
+            if (bgUrlMatch && bgUrlMatch[1]) {
+                const img = new Image();
+                img.src = bgUrlMatch[1]; 
+                img.onload = () => { setTimeout(() => { loader.style.display = 'none'; }, 500); };
+                img.onerror = () => { loader.style.display = 'none'; };
+            } else {
+                loader.style.display = 'none';
+            }
         }
         
         if (clockInterval) clearInterval(clockInterval); 
@@ -1940,28 +1942,15 @@
     }
 
     function closePageB3() {
-        // 1. 关闭结果页
         const page = document.getElementById('pageB3-result');
-        if (page) page.style.display = 'none'; 
-        
+        if (page) {
+            page.style.display = 'none'; 
+        }
         if (clockInterval) clearInterval(clockInterval); 
         
-        // 2. 隐藏加载圈，防止下次莫名其妙闪烁
+        // 重置加载圈状态，确保下次打开还有加载动画
         const loader = document.getElementById('loading-screen');
-        if (loader) loader.style.display = 'none'; 
-
-        // 3. 🌟 重新唤醒你的扫码主页面
-        const subB3Page = document.getElementById('subB3');
-        if (subB3Page) {
-            subB3Page.style.display = 'flex'; 
-        }
-
-        // 4. 重置扫码页的提示文字，准备下一次扫码
-        const nfcLog = document.getElementById('nfc-log');
-        if (nfcLog) {
-            nfcLog.innerText = '苹果手机暂不支持NFC查验'; 
-            nfcLog.style.color = '#111111'; 
-        }
+        if(loader) loader.style.display = 'flex'; 
     }
 
     // 更新所有的秒动时间
