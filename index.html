@@ -2313,44 +2313,44 @@
         });
     }
 
-// 1. 监听 PWA 就绪信号
-window.addEventListener('beforeinstallprompt', (e) => {
-    // 阻止浏览器默认的、丑陋的底部横幅
-    e.preventDefault();
-    // 暂存事件
-    deferredPrompt = e;
-    
-    // 【关键】显示你刚才写的那个漂亮弹窗
-    const modal = document.getElementById('pwa-modal');
-    if (modal) {
-        // 延迟 2 秒显示，给用户一点缓冲，体验更好
-        setTimeout(() => {
-            modal.style.display = 'block';
-        }, 2000);
-    }
-    
-    console.log('PWA 就绪：已弹出自定义引导弹窗');
-});
+           // 1. 监听 PWA 就绪信号
+           // window.addEventListener('beforeinstallprompt', (e) => {
+                // 阻止浏览器默认的、丑陋的底部横幅
+           //     e.preventDefault();
+                // 暂存事件
+           //     deferredPrompt = e;
+                
+                // 【关键】显示你刚才写的那个漂亮弹窗
+            //    const modal = document.getElementById('pwa-modal');
+          //      if (modal) {
+            //        // 延迟 2 秒显示，给用户一点缓冲，体验更好
+         //           setTimeout(() => {
+          //              modal.style.display = 'block';
+         //           }, 2000);
+            //     }
+               //  
+        //         console.log('PWA 就绪：已弹出自定义引导弹窗');
+  //           });
 
-// 2. 处理“立即安装”按钮点击
-document.getElementById('pwa-install').addEventListener('click', async () => {
-    const modal = document.getElementById('pwa-modal');
-    if (deferredPrompt) {
-        // 触发浏览器真正的安装询问框
-        deferredPrompt.prompt();
-        
-        const { outcome } = await deferredPrompt.userChoice;
-        console.log(`用户安装选择: ${outcome}`);
-        
-        deferredPrompt = null;
-        modal.style.display = 'none';
-    }
-});
+ //            // 2. 处理“立即安装”按钮点击
+    //         document.getElementById('pwa-install').addEventListener('click', async () => {
+       //          const modal = document.getElementById('pwa-modal');
+       //          if (deferredPrompt) {
+                    // 触发浏览器真正的安装询问框
+        //             deferredPrompt.prompt();
+                    
+              //       const { outcome } = await deferredPrompt.userChoice;
+           //          console.log(`用户安装选择: ${outcome}`);
+                    
+             //        deferredPrompt = null;
+             //        modal.style.display = 'none';
+           //      }
+        //     });
 
-// 3. 处理“稍后再说”按钮点击
-document.getElementById('pwa-close').addEventListener('click', () => {
-    document.getElementById('pwa-modal').style.display = 'none';
-});
+            // 3. 处理“稍后再说”按钮点击
+            document.getElementById('pwa-close').addEventListener('click', () => {
+                document.getElementById('pwa-modal').style.display = 'none';
+            });
 
 
 
@@ -2396,27 +2396,59 @@ document.getElementById('pwa-close').addEventListener('click', () => {
         }, 1500); // 绿圈转动时间
     });
 
-    // 🌟 你加入的核心控制台函数
+    // 🌟 核心状态控制中心
     function enforceLogin() {
         const isAuthorized = localStorage.getItem('user_authorized');
-        const isGuest = new URLSearchParams(window.location.search).get('guest');
+        const urlParams = new URLSearchParams(window.location.search);
+        const isGuest = urlParams.get('guest');
         
-        // 每次检查时顺便刷新一下“我的”页面那个按钮文字
-        refreshAuthUI();
+        // 💡 抓取 NFC 扫描带来的参数（兼容叫 token 或 uid 的情况）
+        const nfcToken = urlParams.get('token') || urlParams.get('uid'); 
+
+        // 刷新按钮文字和质检报告开关
+        if (typeof refreshAuthUI === 'function') refreshAuthUI();
 
         if (!isAuthorized) {
             if (isGuest) {
-                // 🔴 游客模式：用户点“暂不登录”回来了
+                // 🔴 游客模式
                 isGuestMode = true; 
-                enableGuestInterceptor(); // 开启智能拦截网
+                showCustomPopup("请先登录。");
+                enableGuestInterceptor(); 
             } else {
-                // 🔴 首次访问：先弹窗，2秒后强制拉起登录页
+                // 🔴 未登录且扫码进入：拦截并带上 token 去登录页！
+                // 这里的 window.location.search 会自动把 ?token=xxx 带给 login.html
                 showCustomPopup("请先登录。");
                 setTimeout(() => {
                     window.location.href = './login.html' + window.location.search; 
                 }, 2000);
             }
+        } else {
+            // 🟢 用户已经正式登录！
+            // 检查他是不是刚扫完 NFC（或者从登录页带着 token 回来的）
+            if (nfcToken) {
+                // 延迟 500 毫秒，等页面动画平滑过渡后，自动呼出查验结果页！
+                setTimeout(() => {
+                    autoShowNfcResult(nfcToken);
+                }, 500);
+            }
         }
+    }
+
+    // 🌟 自动展示查验结果的专属函数
+    function autoShowNfcResult(token) {
+        // 1. 这里执行你原本显示扫码结果的代码
+        // 比如，如果是跳到查验页面 (pageB)：
+        // nav('pageB', document.querySelector('.nav-item:nth-child(2)'));
+        
+        // 或者如果你有一个专属的弹窗/详情页：
+        // document.getElementById('your-result-div').style.display = 'block';
+
+        console.log("✅ 成功截获 NFC Token，开始展示数据：", token);
+        
+        // 💡 体验优化：为了防止用户在主页下拉刷新时，每次都重复弹跳出结果页
+        // 我们可以把网址里的 ?token=xxx 悄悄抹掉，但不刷新页面
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState(null, null, cleanUrl);
     }
 
     // ====== 🌟 3. 智能拦截网（白名单放行，黑名单拦截） ======
