@@ -1084,6 +1084,33 @@
         body.pwa-loaded {
             overflow: auto !important; /* 加载完允许滚动 */
         }
+
+
+
+        /* ================= 🌟 通用输入框弹窗样式 ================= */
+#input-popup {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100%;
+    background: rgba(0,0,0,0.6); z-index: 11000;
+    display: none; align-items: center; justify-content: center;
+}
+.input-box {
+    background: white; width: 80%; max-width: 320px; border-radius: 12px; padding: 25px 20px;
+    display: flex; flex-direction: column; align-items: center;
+}
+.input-title { font-size: 18px; font-weight: bold; color: #333; margin-bottom: 20px; }
+.input-field {
+    width: 100%; padding: 12px 15px; border: 1px solid #ccc;
+    border-radius: 8px; font-size: 16px; outline: none; margin-bottom: 25px;
+    background: #f8f9fa; text-align: center;
+}
+.input-field:focus { border-color: #007bff; }
+.input-actions { display: flex; width: 100%; gap: 10px; }
+.i-btn {
+    flex: 1; padding: 12px 0; border-radius: 20px; text-align: center;
+    font-size: 16px; font-weight: bold; cursor: pointer;
+}
+.i-btn-cancel { background: #f2f3f5; color: #666; }
+.i-btn-confirm { background: #007bff; color: white; }
         
     </style>
 </head>
@@ -1294,7 +1321,24 @@
                     <div class="profile-header">
                         <div class="avatar"> <!--C头像--></div>
                         <!-- 文字颜色改成了白色(#fff)和浅灰色(#eee)，防止在蓝底上看不清 -->
-                        <div><h3 style="color:#fff;">用户昵称</h3><p style="color:#eee; font-size:12px;"><!--C-ID--></p></div>
+                        <div class="profile-header" onclick="openDynamicInput('nickname')" style="cursor: pointer;">
+    
+    <div>
+        <h3 id="display-nickname" style="color:#fff;">用户昵称</h3>
+        <p id="display-phone" style="color:#eee; font-size:12px;">1**********</p>
+    </div>
+</div>
+
+<div id="input-popup">
+    <div class="input-box">
+        <div class="input-title" id="dynamic-input-title">修改昵称</div>
+        <input type="text" id="dynamic-input-field" class="input-field" placeholder="请输入新昵称">
+        <div class="input-actions">
+            <div class="i-btn i-btn-cancel" onclick="closeDynamicInput()">取消</div>
+            <div class="i-btn i-btn-confirm" onclick="confirmDynamicInput()">确定</div>
+        </div>
+    </div>
+</div>
                     </div>
                     
                 </div>
@@ -1318,7 +1362,7 @@
                     </svg>售后反馈
                 </div>
                 
-                <button class="logout-btn" onclick="showCustomPopup('已退出')">退出登录</button>
+                <button id="auth-state-btn" class="logout-btn">加载中...</button>
             </div>
         </div>
     </div>
@@ -1467,7 +1511,7 @@
         </div>
     </div>
 </div>
-
+</div>
 
 
 <div id="page-fic1-detail">
@@ -1692,7 +1736,7 @@
     </div>
     
     <div class="detail-content">
-        <h1 class="d-title">用户服务协议</h1>
+        <h1 class="d-title">用户协议</h1>
         <p class="d-text">欢迎您使用本应用。在您使用本应用提供的各项服务之前，请务必仔细阅读并透彻理解本《用户协议》（以下简称“本协议”）。</p>
         
         <!--<h3 class="d-sub-title">1. 协议的接受</h3>
@@ -2074,18 +2118,7 @@
         }
     }
 
-    // 🌟 2. 呼出自定义弹窗的函数
-    function showCustomPopup(message) {
-        // 把传入的文字塞进弹窗里
-        document.getElementById('popup-message').innerText = message;
-        // 显示弹窗 (用 flex 是为了保持居中对齐)
-        document.getElementById('error-popup').style.display = 'flex'; 
-    }
-
-    // 🌟 3. 关闭自定义弹窗的函数 (你原本 HTML 里绑定的就是这个)
-    function closeErrorPopup() {
-        document.getElementById('error-popup').style.display = 'none';
-    }
+  
 
 
 
@@ -2272,18 +2305,13 @@
 
     
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js')
-                .then(registration => {
-                console.log('SW 注册成功:', registration);
-                })
-                .catch(err => {
-                console.log('SW 注册失败:', err);
-                });
-            });
-        }
-
-        let deferredPrompt;
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            for(let registration of registrations) {
+                registration.unregister(); // 强制注销所有离线缓存
+                console.log('已清理旧版 PWA 缓存');
+            }
+        });
+    }
 
 // 1. 监听 PWA 就绪信号
 window.addEventListener('beforeinstallprompt', (e) => {
@@ -2326,51 +2354,233 @@ document.getElementById('pwa-close').addEventListener('click', () => {
 
 
 
+
+
+
+// ====== 🌟 1. 解决 NFC 重复扫码（切回前台）刷新逻辑 ======
+    let lastHiddenTime = 0;
+    document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+            lastHiddenTime = Date.now();
+        } else {
+            if (lastHiddenTime > 0 && (Date.now() - lastHiddenTime > 1000)) {
+                const loader = document.getElementById('loading-screen');
+                if (loader) loader.style.display = 'flex';
+                window.location.reload();
+            }
+        }
+    });
+
+    // ====== 🌟 2. 核心状态控制中心 ======
+    let isGuestMode = false; 
+
+    // 页面加载启动流程
     window.addEventListener('load', function() {
         const splash = document.getElementById('pwa-splash-screen');
         const body = document.body;
 
-        // 给一秒钟的展示时间，防止页面加载过快导致动画一闪而过
         setTimeout(() => {
             if (splash) {
-                // 1. 让启动页淡出
+                // 启动页淡出动画
                 splash.style.opacity = '0';
-                
-                // 2. 让主内容淡入
                 body.classList.add('pwa-loaded');
-
-                // 3. 动画结束后彻底移除启动页，不占内存
+                
+                // 动画结束后 (800ms) 执行你的核心控制台
                 setTimeout(() => {
                     splash.remove();
-                }, 1800);
+                    enforceLogin(); // 🌟 这里执行你加入的函数
+                }, 800);
+            } else {
+                enforceLogin();
             }
-        }, 500); 
+        }, 1500); // 绿圈转动时间
     });
 
+    // 🌟 你加入的核心控制台函数
+    function enforceLogin() {
+        const isAuthorized = localStorage.getItem('user_authorized');
+        const isGuest = new URLSearchParams(window.location.search).get('guest');
+        
+        // 每次检查时顺便刷新一下“我的”页面那个按钮文字
+        refreshAuthUI();
 
-
-
-
-
-
-// ====== 🌟 强力自重定向逻辑：确保每次扫码都是新页面 🌟 ======
-    (function() {
-        const url = new URL(window.location.href);
-        const now = Date.now();
-        const timestamp = url.searchParams.get('_t');
-
-        // 如果地址里没有时间戳，或者时间戳是 2 秒前的（说明是重复扫码唤醒）
-        if (!timestamp || (now - parseInt(timestamp) > 1500)) {
-            url.searchParams.set('_t', now); // 加上当前毫秒级时间戳
-            window.location.replace(url.toString()); // 瞬间重定向到带标识符的新地址
+        if (!isAuthorized) {
+            if (isGuest) {
+                // 🔴 游客模式：用户点“暂不登录”回来了
+                isGuestMode = true; 
+                enableGuestInterceptor(); // 开启智能拦截网
+            } else {
+                // 🔴 首次访问：先弹窗，2秒后强制拉起登录页
+                showCustomPopup("请先登录。");
+                setTimeout(() => {
+                    window.location.href = './login.html' + window.location.search; 
+                }, 2000);
+            }
         }
-    })();
+    }
 
-    // 页面加载后的原有逻辑...
-    window.addEventListener('DOMContentLoaded', () => {
-        const urlParams = new URLSearchParams(window.location.search);
-        // ... 原有的 token/uid 解析逻辑 ...
-    });
+    // ====== 🌟 3. 智能拦截网（白名单放行，黑名单拦截） ======
+    function enableGuestInterceptor() {
+        document.addEventListener('click', function(event) {
+            try {
+                // 过滤掉底层无效节点
+                if (!event.target || typeof event.target.closest !== 'function') return;
+                // 弹窗内部点击必须放行
+                if (event.target.closest('#error-popup')) return;
+
+                // 识别点击动作
+                const targetNode = event.target.closest('[onclick]');
+                const onclickStr = targetNode ? targetNode.getAttribute('onclick') : '';
+                const isProfileHeader = event.target.closest('.profile-header');
+
+                // 🚨 黑名单名单：这些功能点击会弹窗并送去登录
+                const blockedActions = [
+                    "nav('pageB'",        // 查验导航
+                    "openLogDetail",      // 查验记录
+                    "openFic4Detail",     // 售后反馈
+                    "openFic5Detail",     // 消费者红包
+                    "openSurvey",         // 调查问卷
+                    "realLogout"          // 退出/授权按钮
+                ];
+
+                let shouldBlock = !!isProfileHeader;
+                if (!shouldBlock && onclickStr) {
+                    for (let action of blockedActions) {
+                        if (onclickStr.includes(action)) {
+                            shouldBlock = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (shouldBlock) {
+                    showCustomPopup("请先登录。");
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+            } catch (e) {
+                console.error("拦截器安全放行", e);
+            }
+        }, true); 
+    }
+
+    // ====== 🌟 4. 动态按钮与弹窗工具 ======
+    function refreshAuthUI() {
+        const authBtn = document.getElementById('auth-state-btn');
+        if (!authBtn) return;
+        const isAuthorized = localStorage.getItem('user_authorized');
+
+        if (isAuthorized === 'true') {
+            authBtn.innerText = "退出登录";
+            authBtn.onclick = function() { realLogout(); };
+        } else {
+            authBtn.innerText = "授权登录";
+            authBtn.onclick = function() { 
+                window.location.href = './login.html' + window.location.search; 
+            };
+        }
+    }
+
+    // 🌟 退出登录：直接清除状态，不弹出任何窗口
+    function realLogout() {
+        // 1. 直接清除本地授权记录
+        localStorage.removeItem('user_authorized');
+        
+        // 2. 如果之前存过手机号等其他数据，也可以在这里一并清除
+        // localStorage.removeItem('user_phone');
+
+        // 3. 立即重置 URL 并刷新页面
+        // 移除网址里残留的 ?guest=1 标记，确保页面回到最初最干净的未授权状态
+        const cleanUrl = window.location.pathname + window.location.search.replace('&guest=1', '').replace('?guest=1', '');
+        window.location.href = cleanUrl;
+    }
+
+    function showCustomPopup(message) {
+        const msgEl = document.getElementById('popup-message');
+        const popupEl = document.getElementById('error-popup');
+        if (msgEl && popupEl) {
+            msgEl.innerText = message;
+            popupEl.style.display = 'flex'; 
+        }
+    }
+
+    function closeErrorPopup() {
+        const popupEl = document.getElementById('error-popup');
+        if (popupEl) {
+            popupEl.style.display = 'none'; // 隐藏弹窗
+        }
+        
+        // 💡 仅保留游客拦截逻辑：
+        // 如果用户是在游客模式下点到了受限功能被拦截，点击“确定”后送去登录页
+        if (isGuestMode) {
+            window.location.href = './login.html' + window.location.search;
+        }
+    }
+
+
+    let currentInputMode = '';
+
+    // 🌟 1. 初始化用户信息（页面加载时调用）
+    function initUserInfo() {
+        const nick = localStorage.getItem('user_nickname') || "用户昵称";
+        const phone = localStorage.getItem('user_phone') || "";
+        
+        document.getElementById('display-nickname').innerText = nick;
+        
+        // 如果有存入的手机号，执行脱敏显示
+        if (phone && phone.length === 11) {
+            const masked = phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
+            document.getElementById('display-phone').innerText = masked;
+        } else if (phone) {
+            document.getElementById('display-phone').innerText = phone;
+        }
+    }
+
+    // 🌟 2. 呼出修改弹窗
+    function openDynamicInput(mode) {
+        currentInputMode = mode;
+        const titleEl = document.getElementById('dynamic-input-title');
+        const inputEl = document.getElementById('dynamic-input-field');
+        
+        if (mode === 'nickname') {
+            titleEl.innerText = "修改昵称";
+            inputEl.type = "text";
+            inputEl.placeholder = "请输入新昵称";
+            inputEl.maxLength = 15;
+            inputEl.value = document.getElementById('display-nickname').innerText;
+        }
+        
+        document.getElementById('input-popup').style.display = 'flex';
+    }
+
+    function closeDynamicInput() {
+        document.getElementById('input-popup').style.display = 'none';
+    }
+
+    // 🌟 3. 确认修改逻辑
+    function confirmDynamicInput() {
+        const val = document.getElementById('dynamic-input-field').value.trim();
+        
+        if (currentInputMode === 'nickname') {
+            if (!val) {
+                showCustomPopup("昵称不能为空");
+                return;
+            }
+            
+            // 更新本地存储
+            localStorage.setItem('user_nickname', val);
+            // 更新界面显示
+            document.getElementById('display-nickname').innerText = val;
+            
+            closeDynamicInput();
+            showCustomPopup("修改成功！");
+        }
+    }
+
+    // 🌟 在你原有的 window.addEventListener('load') 或 enforceLogin 中调用 initUserInfo()
+    // 确保用户一进来就能看到最新的昵称
+    window.addEventListener('load', initUserInfo);
+
 
 
 
