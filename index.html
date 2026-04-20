@@ -2003,20 +2003,6 @@
         }
     }
 
-    // ====== 🌟 核心：页面加载时自动解析 URL (支持 token 或 uid) 🌟 ======
-    window.addEventListener('DOMContentLoaded', () => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const tokenFromUrl = urlParams.get('token'); 
-        const uidFromUrl = urlParams.get('uid');     
-
-        if (tokenFromUrl) {
-            // 扫码进入：优先处理加密 token
-            setTimeout(() => { checkAndJump('token', tokenFromUrl); }, 300);
-        } else if (uidFromUrl) {
-            // 链接进入：处理明文 uid
-            setTimeout(() => { checkAndJump('uid', uidFromUrl); }, 300);
-        }
-    });
 
   
 
@@ -2434,22 +2420,29 @@
         }
     }
 
-    // 🌟 自动展示查验结果的专属函数
-    function autoShowNfcResult(token) {
-        // 1. 这里执行你原本显示扫码结果的代码
-        // 比如，如果是跳到查验页面 (pageB)：
-        // nav('pageB', document.querySelector('.nav-item:nth-child(2)'));
-        
-        // 或者如果你有一个专属的弹窗/详情页：
-        // document.getElementById('your-result-div').style.display = 'block';
+// 🌟 自动展示查验结果的专属函数（只有确认登录后才会执行到这里！）
+    function autoShowNfcResult() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const tokenFromUrl = urlParams.get('token'); 
+        const uidFromUrl = urlParams.get('uid');
 
-        console.log("✅ 成功截获 NFC Token，开始展示数据：", token);
+        console.log("✅ 成功截获 NFC 参数，保安放行，开始展示数据...");
+
+        // 调用你写好的查验核心函数，并在界面上弹出 B3 结果页
+        if (tokenFromUrl) {
+            checkAndJump('token', tokenFromUrl);
+        } else if (uidFromUrl) {
+            checkAndJump('uid', uidFromUrl);
+        }
         
-        // 💡 体验优化：为了防止用户在主页下拉刷新时，每次都重复弹跳出结果页
-        // 我们可以把网址里的 ?token=xxx 悄悄抹掉，但不刷新页面
+        // 💡 体验优化：把网址里的 ?token=xxx 悄悄抹掉
+        // 这样用户在结果页下拉刷新时，就不会重复弹加载圈了
         const cleanUrl = window.location.pathname;
         window.history.replaceState(null, null, cleanUrl);
     }
+
+
+
 
     // ====== 🌟 3. 智能拦截网（白名单放行，黑名单拦截） ======
     function enableGuestInterceptor() {
