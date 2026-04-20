@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>协议详情</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+        body { background: #fff; color: #333; line-height: 1.6; }
+        .header {
+            height: 55px; display: flex; align-items: center; padding: 0 15px;
+            border-bottom: 1px solid #f0f0f0; position: sticky; top: 0; background: #fff;
+        }
+        .back-btn { font-size: 16px; color: #333; cursor: pointer; font-weight: bold; text-decoration: none; }
+        .content { padding: 20px; text-align: justify; }
+        .title { font-size: 22px; font-weight: bold; color: #c42026; margin-bottom: 20px; }
+        .text { font-size: 15px; color: #666; white-space: pre-line; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="javascript:history.back()" class="back-btn">&lt; 返回</a>
+        <div style="flex:1; text-align:center; font-weight:bold; margin-right:40px;" id="header-title">协议详情</div>
+    </div>
+    <div class="content">
+        <h1 class="title" id="page-title">加载中...</h1>
+        <div class="text" id="page-content">正在加载协议内容...</div>
+    </div>
+
+<script>
+    const configs = {
+        'user': {
+            title: '用户服务协议',
+            content: `欢迎您使用本应用。在您使用本应用提供的各项服务之前，请务必仔细阅读并透彻理解本《用户协议》。\n\n1. 服务说明：本系统提供防伪验证及溯源查询服务...\n2. 用户义务：用户应遵守相关法律法规...`
+        },
+        'privacy': {
+            title: '隐私政策',
+            content: `我们非常重视您的隐私保护。本政策阐明了我们如何收集和使用您的必要数据。\n\n1. 数据收集：我们收集NFC芯片ID及查验时间...\n2. 数据安全：我们采用加密技术确保您的数据安全...`
+        }
+    };
+
+    window.onload = () => {
+        const params = new URLSearchParams(window.location.search);
+        const type = params.get('type') || 'user';
+        const config = configs[type];
+        
+        document.getElementById('header-title').innerText = config.title;
+        document.getElementById('page-title').innerText = config.title;
+        document.getElementById('page-content').innerText = config.content;
+        document.title = config.title;
+    };
+</script>
+</body>
+</html>
