@@ -1529,7 +1529,7 @@
 </div>
         
         <div class="jump-bar-wrapper">
-    <div class="jump-bar" onclick="closePageB3(); startScanner();">
+    <div class="jump-bar" onclick="jumpToB1AndScan()">
         建议您进一步验证<span class="text-red-large">盒真伪</span> &gt;
     </div>
 </div>
@@ -2125,6 +2125,29 @@
         if (scanner) {
             scanner.stop().catch(e => console.log("相机关闭提示:", e));
         }
+    }
+
+    // ================= 🌟 终极解决方案：自动路由到扫码页 =================
+    function jumpToB1AndScan() {
+        // 1. 先安全地关闭当前的 B3 结果页
+        closePageB3();
+
+        // 2. 模拟用户点击底部的“查验”导航 (切换到 Page B)
+        const navBBtn = document.querySelector('.nav-item.nav-b');
+        if (navBBtn) {
+            nav('pageB', navBBtn);
+        }
+
+        // 3. 模拟用户点击顶部的“二维码验证”选项卡 (切换到 B1)
+        const tabB1Btn = document.querySelector('.sub-nav-item:nth-child(1)');
+        if (tabB1Btn) {
+            tabB('B1', tabB1Btn);
+        }
+
+        // 4. 延迟 300 毫秒，等页面切换完毕后，自动呼出原生的相机
+        setTimeout(() => {
+            startScanner();
+        }, 300);
     }
 
 
