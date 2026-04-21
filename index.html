@@ -223,30 +223,9 @@
         .nfc-gif-box { margin-top: 30px; display: flex; flex-direction: column; align-items: center; flex-shrink: 0;}
         .nfc-gif-box img { width: 300px; height:350px;  object-fit: cover; box-shadow: 0 4px 20px rgba(0,123,255,0.2); }
 
-      /* ================= 🌟 全局独立相机层 🌟 ================= */
-#qr-reader-container { 
-    position: fixed; /* 必须是 fixed，彻底脱离文档流 */
-    top: 0; 
-    left: 0; 
-    width: 100vw; 
-    height: 100dvh; 
-    background: #000000; 
-    z-index: 10000; /* 极高层级，压过所有结果页和弹窗 */
-    display: none; 
-    flex-direction: column; 
-}
+        #qr-reader-container { position: absolute; top:0; left:0; width: 100%; height: 100%; background: black; z-index: 9999; display: none; flex-direction: column; }
+        .close-qr { color: white; text-align: center; padding: 20px; background: #333; cursor: pointer; flex-shrink: 0;}
 
-.close-qr { 
-    color: white; 
-    text-align: center; 
-    padding: 25px 20px; 
-    background: #222222; 
-    cursor: pointer; 
-    flex-shrink: 0;
-    font-size: 16px;
-    font-weight: bold;
-    padding-bottom: env(safe-area-inset-bottom, 25px); /* 适配苹果手机底部安全区 */
-}
      
        
         /* ================= 6. Page C 完整样式 ================= */
@@ -1251,7 +1230,11 @@
                     <div class="f2-function-container">
 
                 <!-- B1 扫码页面 -->
-              
+                <div id="subB1" class="sub-page active">
+                    <div id="qr-reader-container">
+                        <div id="qr-reader" style="flex:1;"></div>
+                        <div class="close-qr" onclick="stopScanner()">退出扫描</div>
+                    </div>
                     
                     <div class="ring-container">
                         <div class="ring-outer">
@@ -1528,7 +1511,8 @@
     
 </div>
         
-       <div class="jump-bar-wrapper">
+        <div class="jump-bar-wrapper">
+<div class="jump-bar-wrapper">
     <div class="jump-bar" onclick="startScannerB3()">
         建议您进一步验证<span class="text-red-large">盒真伪</span> &gt;
     </div>
@@ -1875,11 +1859,6 @@
 </div>
 
 
-<div id="qr-reader-container">
-    <div id="qr-reader" style="flex:1;"></div>
-    <div class="close-qr" onclick="stopScanner()">退出扫描</div>
-</div>
-
 <!-- ================= 失败错误弹窗 ================= -->
 <div id="error-popup">
     <div class="error-box">
@@ -1894,20 +1873,28 @@
 
 
 
-
-<div id="qr-reader-container">
-    <div id="qr-reader" style="flex:1;"></div>
-    <div class="close-qr" onclick="stopScanner()">退出扫描</div>
-</div>
-
 <div id="qr-reader-container-b3" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: #000000; z-index: 15000; display: none; flex-direction: column;">
     <div id="qr-reader-b3" style="flex:1;"></div>
-    <div class="close-qr" onclick="stopScannerB3()">退出盒码验证</div>
+    <div class="close-qr" style="color: white; text-align: center; padding: 25px 20px; background: #222222; cursor: pointer; flex-shrink: 0; font-size: 16px; font-weight: bold; padding-bottom: env(safe-area-inset-bottom, 25px);" onclick="stopScannerB3()">退出盒码验证</div>
 </div>
 
+<!--
 
-
-
+<div id="pwa-modal" style="display:none; position:fixed; bottom:20px; left:20px; right:20px; background:#fff; padding:20px; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.2); z-index:9999; border:1px solid #eee;">
+    <div style="display:flex; align-items:center;">
+        <img src="/app2.png" style="width:40px; height:40px; border-radius:8px; margin-right:12px;">
+        <div style="flex:1;">
+            <strong style="display:block; font-size:16px;">安装官方查验插件</strong>
+            <span style="font-size:13px; color:#666;">添加到桌面，下次查验更快速</span>
+        </div>
+    </div>
+    <div style="margin-top:15px; display:flex; justify-content:flex-end; gap:10px;">
+        <button id="pwa-close" style="background:none; border:none; color:#999; padding:8px 15px;">稍后再说</button>
+        <button id="pwa-install" style="background:#007bff; border:none; color:#fff; padding:8px 20px; border-radius:6px; font-weight:bold;">立即安装</button>
+    </div>
+</div>
+        </div>
+-->
       
 
 <script>
@@ -2097,61 +2084,44 @@
         clocks.forEach(clock => { clock.innerText = fullTimeStr; });
     }
 
-    // ===== 4. 其他组件逻辑 (扫码与B2验证) =====
-    // ===== 🌟 安全重构的扫码逻辑 =====
+    // ===== 4. B1 页面普通扫码逻辑 =====
     let scanner = null;
-
     function startScanner() {
-        isCameraActive = true; // 🌟 挂上免死金牌，阻断页面刷新
+        isCameraActive = true; // 🌟 挂上免死金牌
         document.getElementById('qr-reader-container').style.display = 'flex';
-        
         if (!scanner) scanner = new Html5Qrcode("qr-reader");
-        
-        scanner.start(
-            { facingMode: "environment" }, 
-            { fps: 10, qrbox: 250 }, 
-            (txt) => {
-                stopScanner();
-                if (MOCK_DB.usedQRs.includes(txt)) {
-                    showCustomPopup("该二维码已过期！");
-                } else { 
-                    MOCK_DB.usedQRs.push(txt); 
-                    showCustomPopup("验证成功！"); 
-                }
-            }
-        ).catch((err) => { 
-            console.error("相机错误:", err);
-            showCustomPopup("摄像头启动失败，请检查浏览器权限");
-            stopScanner(); 
-        });
+        scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, 
+        (txt) => {
+            stopScanner();
+            if (MOCK_DB.usedQRs.includes(txt)) showCustomPopup("该二维码已过期！");
+            else { MOCK_DB.usedQRs.push(txt); showCustomPopup("验证成功！"); }
+        }).catch(() => { showCustomPopup("摄像头启动失败，请检查浏览器权限"); stopScanner(); });
+    }
+    function stopScanner() {
+        isCameraActive = false; // 🌟 摘下免死金牌
+        document.getElementById('qr-reader-container').style.display = 'none';
+        if (scanner) scanner.stop().catch(e => console.log(e));
     }
 
 
-
-
-    // ================= 🌟 专属 B3 结果页的独立相机 =================
+    // ================= 🌟 5. 新增：专属 B3 结果页的独立相机逻辑 🌟 =================
     let scannerB3 = null;
-
     function startScannerB3() {
-        isCameraActive = true; // 🌟 挂上免死金牌，阻断页面刷新
-        
-        // 显示专属的相机全屏遮罩
+        isCameraActive = true; // 🌟 挂上免死金牌
         document.getElementById('qr-reader-container-b3').style.display = 'flex';
         
-        // 绑定到专用的 div: qr-reader-b3 上
         if (!scannerB3) scannerB3 = new Html5Qrcode("qr-reader-b3");
         
         scannerB3.start(
             { facingMode: "environment" }, 
             { fps: 10, qrbox: 250 }, 
             (txt) => {
-                // 扫码成功后的逻辑
-                stopScannerB3(); // 先关闭相机
+                // 扫码成功
+                stopScannerB3(); // 关掉 B3 相机
                 
-                // 🌟 这里写你独立的【盒码】验证逻辑！
-                // 比如你可以弹窗，或者发起不同的后端请求
-                console.log("盒码扫码结果：", txt);
-                showCustomPopup("盒码查验成功！");
+                // 🌟 这里是属于盒码的专属逻辑！
+                console.log("盒码结果：", txt);
+                showCustomPopup("盒码验证成功！");
             }
         ).catch((err) => { 
             console.error("专属相机启动错误:", err);
@@ -2163,12 +2133,8 @@
     function stopScannerB3() {
         isCameraActive = false; // 🌟 摘下免死金牌
         document.getElementById('qr-reader-container-b3').style.display = 'none';
-        
-        if (scannerB3) {
-            scannerB3.stop().catch(e => console.log("相机关闭提示:", e));
-        }
+        if (scannerB3) scannerB3.stop().catch(e => console.log(e));
     }
-
 
 
  // 🌟 1. 改写后的查验逻辑
@@ -2374,14 +2340,14 @@
     }
 
     
-        if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function(registrations) {
-            for(let registration of registrations) {
-                registration.unregister(); // 强制注销所有离线缓存
-                console.log('已清理旧版 PWA 缓存');
-            }
-        });
-    }
+  //      if ('serviceWorker' in navigator) {
+   //     navigator.serviceWorker.getRegistrations().then(function(registrations) {
+   //         for(let registration of registrations) {
+   //             registration.unregister(); // 强制注销所有离线缓存
+   //             console.log('已清理旧版 PWA 缓存');
+  //          }
+ //       });
+  //  }
 
            // 1. 监听 PWA 就绪信号
            // window.addEventListener('beforeinstallprompt', (e) => {
@@ -2417,25 +2383,23 @@
            //      }
         //     });
 
-            // 3. 处理“稍后再说”按钮点击
-        //document.getElementById('pwa-close').addEventListener('click', () => {
-         //       document.getElementById('pwa-modal').style.display = 'none';
-      //      });
-
-
+         //   // 3. 处理“稍后再说”按钮点击
+         //   document.getElementById('pwa-close').addEventListener('click', () => {
+        //        document.getElementById('pwa-modal').style.display = 'none';
+         //   });
 
 
 
 
 // ====== 🌟 1. 解决 NFC 重复扫码（切回前台）刷新逻辑 ======
     let lastHiddenTime = 0;
-    let isCameraActive = false; // 🌟 新增：相机活动标记
+    let isCameraActive = false; // 🌟 新增相机状态标记
 
     document.addEventListener("visibilitychange", () => {
         if (document.hidden) {
             lastHiddenTime = Date.now();
         } else {
-            // 🌟 重点：如果 isCameraActive 为 true（正在开相机），直接拦截，不许刷新！
+            // 🌟 重点：如果 isCameraActive 是 true（正在开相机），绝对不刷新！
             if (lastHiddenTime > 0 && (Date.now() - lastHiddenTime > 1000) && !isCameraActive) {
                 const loader = document.getElementById('loading-screen');
                 if (loader) loader.style.display = 'flex';
