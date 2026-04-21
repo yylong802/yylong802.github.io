@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>汾酒防伪验证系统</title>
-    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdn.staticfile.net/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
         <!-- 引入 manifest 文件 -->
     <link rel="manifest" href="/manifest.json">
 
@@ -223,7 +223,7 @@
         .nfc-gif-box { margin-top: 30px; display: flex; flex-direction: column; align-items: center; flex-shrink: 0;}
         .nfc-gif-box img { width: 300px; height:350px;  object-fit: cover; box-shadow: 0 4px 20px rgba(0,123,255,0.2); }
 
-       /* ================= 🌟 全局独立相机层 🌟 ================= */
+      /* ================= 🌟 全局独立相机层 🌟 ================= */
 #qr-reader-container { 
     position: fixed; /* 必须是 fixed，彻底脱离文档流 */
     top: 0; 
@@ -1875,6 +1875,11 @@
 </div>
 
 
+<div id="qr-reader-container">
+    <div id="qr-reader" style="flex:1;"></div>
+    <div class="close-qr" onclick="stopScanner()">退出扫描</div>
+</div>
+
 <!-- ================= 失败错误弹窗 ================= -->
 <div id="error-popup">
     <div class="error-box">
@@ -1889,29 +1894,11 @@
 
 
 
-<div id="qr-reader-container">
-    <div id="qr-reader" style="flex:1;"></div>
-    <div class="close-qr" onclick="stopScanner()">退出扫描</div>
-</div>
 
 
 
 
-<!--
-<div id="pwa-modal" style="display:none; position:fixed; bottom:20px; left:20px; right:20px; background:#fff; padding:20px; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.2); z-index:9999; border:1px solid #eee;">
-    <div style="display:flex; align-items:center;">
-        <img src="/app2.png" style="width:40px; height:40px; border-radius:8px; margin-right:12px;">
-        <div style="flex:1;">
-            <strong style="display:block; font-size:16px;">安装官方查验插件</strong>
-            <span style="font-size:13px; color:#666;">添加到桌面，下次查验更快速</span>
-        </div>
-    </div>
-    <div style="margin-top:15px; display:flex; justify-content:flex-end; gap:10px;">
-        <button id="pwa-close" style="background:none; border:none; color:#999; padding:8px 15px;">稍后再说</button>
-        <button id="pwa-install" style="background:#007bff; border:none; color:#fff; padding:8px 20px; border-radius:6px; font-weight:bold;">立即安装</button>
-    </div>
-</div>
-        </div>-->
+
 
       
 
@@ -2103,20 +2090,41 @@
     }
 
     // ===== 4. 其他组件逻辑 (扫码与B2验证) =====
+    // ===== 🌟 安全重构的扫码逻辑 =====
     let scanner = null;
+
     function startScanner() {
+        isCameraActive = true; // 🌟 挂上免死金牌，阻断页面刷新
         document.getElementById('qr-reader-container').style.display = 'flex';
+        
         if (!scanner) scanner = new Html5Qrcode("qr-reader");
-        scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, 
-        (txt) => {
-            stopScanner();
-            if (MOCK_DB.usedQRs.includes(txt)) showCustomPopup("该二维码已过期！");
-            else { MOCK_DB.usedQRs.push(txt); showCustomPopup("验证成功！"); }
-        }).catch(() => { showCustomPopup("摄像头启动失败");stopScanner(); });
+        
+        scanner.start(
+            { facingMode: "environment" }, 
+            { fps: 10, qrbox: 250 }, 
+            (txt) => {
+                stopScanner();
+                if (MOCK_DB.usedQRs.includes(txt)) {
+                    showCustomPopup("该二维码已过期！");
+                } else { 
+                    MOCK_DB.usedQRs.push(txt); 
+                    showCustomPopup("验证成功！"); 
+                }
+            }
+        ).catch((err) => { 
+            console.error("相机错误:", err);
+            showCustomPopup("摄像头启动失败，请检查浏览器权限");
+            stopScanner(); 
+        });
     }
+
     function stopScanner() {
+        isCameraActive = false; // 🌟 摘下免死金牌
         document.getElementById('qr-reader-container').style.display = 'none';
-        if (scanner) scanner.stop();
+        
+        if (scanner) {
+            scanner.stop().catch(e => console.log("相机关闭提示:", e));
+        }
     }
 
 
@@ -2379,11 +2387,14 @@
 
 // ====== 🌟 1. 解决 NFC 重复扫码（切回前台）刷新逻辑 ======
     let lastHiddenTime = 0;
+    let isCameraActive = false; // 🌟 新增：相机活动标记
+
     document.addEventListener("visibilitychange", () => {
         if (document.hidden) {
             lastHiddenTime = Date.now();
         } else {
-            if (lastHiddenTime > 0 && (Date.now() - lastHiddenTime > 1000)) {
+            // 🌟 重点：如果 isCameraActive 为 true（正在开相机），直接拦截，不许刷新！
+            if (lastHiddenTime > 0 && (Date.now() - lastHiddenTime > 1000) && !isCameraActive) {
                 const loader = document.getElementById('loading-screen');
                 if (loader) loader.style.display = 'flex';
                 window.location.reload();
