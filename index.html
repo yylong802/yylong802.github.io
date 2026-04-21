@@ -1528,8 +1528,8 @@
     
 </div>
         
-        <div class="jump-bar-wrapper">
-    <div class="jump-bar" onclick="jumpToB1AndScan()">
+       <div class="jump-bar-wrapper">
+    <div class="jump-bar" onclick="startScannerB3()">
         建议您进一步验证<span class="text-red-large">盒真伪</span> &gt;
     </div>
 </div>
@@ -1895,7 +1895,15 @@
 
 
 
+<div id="qr-reader-container">
+    <div id="qr-reader" style="flex:1;"></div>
+    <div class="close-qr" onclick="stopScanner()">退出扫描</div>
+</div>
 
+<div id="qr-reader-container-b3" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: #000000; z-index: 15000; display: none; flex-direction: column;">
+    <div id="qr-reader-b3" style="flex:1;"></div>
+    <div class="close-qr" onclick="stopScannerB3()">退出盒码验证</div>
+</div>
 
 
 
@@ -2118,36 +2126,47 @@
         });
     }
 
-    function stopScanner() {
-        isCameraActive = false; // 🌟 摘下免死金牌
-        document.getElementById('qr-reader-container').style.display = 'none';
+
+
+
+    // ================= 🌟 专属 B3 结果页的独立相机 =================
+    let scannerB3 = null;
+
+    function startScannerB3() {
+        isCameraActive = true; // 🌟 挂上免死金牌，阻断页面刷新
         
-        if (scanner) {
-            scanner.stop().catch(e => console.log("相机关闭提示:", e));
-        }
+        // 显示专属的相机全屏遮罩
+        document.getElementById('qr-reader-container-b3').style.display = 'flex';
+        
+        // 绑定到专用的 div: qr-reader-b3 上
+        if (!scannerB3) scannerB3 = new Html5Qrcode("qr-reader-b3");
+        
+        scannerB3.start(
+            { facingMode: "environment" }, 
+            { fps: 10, qrbox: 250 }, 
+            (txt) => {
+                // 扫码成功后的逻辑
+                stopScannerB3(); // 先关闭相机
+                
+                // 🌟 这里写你独立的【盒码】验证逻辑！
+                // 比如你可以弹窗，或者发起不同的后端请求
+                console.log("盒码扫码结果：", txt);
+                showCustomPopup("盒码查验成功！");
+            }
+        ).catch((err) => { 
+            console.error("专属相机启动错误:", err);
+            showCustomPopup("摄像头启动失败，请检查权限");
+            stopScannerB3(); 
+        });
     }
 
-    // ================= 🌟 终极解决方案：自动路由到扫码页 =================
-    function jumpToB1AndScan() {
-        // 1. 先安全地关闭当前的 B3 结果页
-        closePageB3();
-
-        // 2. 模拟用户点击底部的“查验”导航 (切换到 Page B)
-        const navBBtn = document.querySelector('.nav-item.nav-b');
-        if (navBBtn) {
-            nav('pageB', navBBtn);
+    function stopScannerB3() {
+        isCameraActive = false; // 🌟 摘下免死金牌
+        document.getElementById('qr-reader-container-b3').style.display = 'none';
+        
+        if (scannerB3) {
+            scannerB3.stop().catch(e => console.log("相机关闭提示:", e));
         }
-
-        // 3. 模拟用户点击顶部的“二维码验证”选项卡 (切换到 B1)
-        const tabB1Btn = document.querySelector('.sub-nav-item:nth-child(1)');
-        if (tabB1Btn) {
-            tabB('B1', tabB1Btn);
-        }
-
-        // 4. 延迟 300 毫秒，等页面切换完毕后，自动呼出原生的相机
-        setTimeout(() => {
-            startScanner();
-        }, 300);
     }
 
 
