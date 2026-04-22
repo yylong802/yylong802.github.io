@@ -8,11 +8,7 @@
         <!-- 引入 manifest 文件 -->
     <link rel="manifest" href="/manifest.json">
 
-    <!-- 兼容苹果 iOS 的专属设置（苹果对 PWA 自动弹窗支持较差，需手动配置图标） -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="apple-mobile-web-app-title" content="防伪查验">
-    <link rel="apple-touch-icon" href="/app2.png">
+
 
     <style>
         /* ================= 1. 全局与颜色变量 ================= */
@@ -424,9 +420,6 @@
 .i2-label { flex: 0.4; color: #666; font-size: 14px; }
 .i2-value { flex: 0.6; font-size: 14px; }
 
-/* 跳转按钮样式 */
-.jump-bar-wrapper { width: 90%; margin: 0 auto; }
-.jump-bar { background-color: #f5d5c5; color: 022b69; padding: 5px 15px; border-radius: 10px; text-align: right; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); cursor: pointer;}
 
         .table-container { width: 90%; margin: 0 auto 30px auto; }
         .info-table { color: white; font-size: 15px; text-shadow: 0 1px 3px rgba(0,0,0,0.8); display: flex; flex-direction: column; }
@@ -439,7 +432,7 @@
         .indent-2 { padding-left: 1.5em; }
 
         .jump-bar-wrapper { width: 90%; margin: 0 auto; }
-        .jump-bar { background-color: #f5d5c5; color: #8b5e3c; padding: 15px 20px; border-radius: 10px; text-align: right; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); cursor: pointer;}
+        .jump-bar { background-color: #f5d5c5; color: #8b5e3c; padding: 5px 15px; border-radius: 10px; text-align: right; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); cursor: pointer;}
         .pinkbk{ background-color: #fff9f9;}
         
         /* ================= 背景悬浮字与选项卡 ================= */
@@ -1546,7 +1539,7 @@
         <h3 class="d-sub-title">公司网址 <span class="text-small-red">www.fenjiu.com.cn</span></h3>
         <img src="./map.png" class="d-img-content">
         <br><br><br><br><br><br><br><br>
-    </div> </div> ```
+    </div> </div>  
 
 
 
@@ -1922,7 +1915,7 @@
             }
 
         } catch (error) {
-            console.warn("⚠️ API请求失败或无数据库，自动切换到【本地算法离线验证】", error);
+            console.warn("apierr,local", error);
             
             // 2. 触发本地备用方案
             fallbackLocalValidation(type, value);
@@ -1950,17 +1943,17 @@
             // 组装本地模拟数据
             const mockProduct = {
                 name: "青花汾酒(53度 20升级版) ",
-                date: "2026-04-21", // 可以取本地当天时间
+                date: "2026-03-21", // 可以取本地当天时间
                 factory: "汾酒股份成装一分厂",
                 workshop: "成四车间 ",
                 line: "三线",
                 isOpened: false,
                 alcohol: "53度",
-                inspectResult: "本地离线合格",
+                inspectResult: "合格",
                  inspectId: "20240321390242" //+ localKey // 使用计算出的特征码作为单号
             };
             
-            renderProductData(mockProduct, "本地离线");
+            renderProductData(mockProduct, "");
         } else {
             if (loader) loader.style.display = 'none';
             if (pageB3) pageB3.style.display = 'none';
@@ -1980,7 +1973,7 @@
         document.getElementById('g1-status').innerText = p.isOpened ? "已开瓶" : "未开瓶";
         document.getElementById('g1-status').style.color = p.isOpened ? "red" : "#020101";
 
-        document.getElementById('g2-date').innerText = p.date || "2026-04-21";
+        document.getElementById('g2-date').innerText = p.date || "2026-03-21";
         document.getElementById('g2-alcohol').innerText = p.alcohol || "53度";
         document.getElementById('g2-result').innerText = p.inspectResult || "合格";
         document.getElementById('g2-id').innerText = p.inspectId || "未获取";
@@ -2003,12 +1996,15 @@
         checkAndJump('uid', uid);
     }
 
-    // 3. 修改安卓 NFC 监听部分
+  
+   // 3. 修改安卓 NFC 监听部分
+    let nfcRunning = false; // 必须加上这行声明！
     async function startNfc() {
         if (!("NDEFReader" in window) || nfcRunning) {
             document.getElementById('nfc-log').innerText = "苹果手机暂不支持NFC查验";
             return;
         }
+        // ... 后面保持不变 ...
         try {
             nfcRunning = true;
             const ndef = new NDEFReader();
@@ -2409,13 +2405,18 @@
         }
     });
 
-    // ====== 🌟 2. 核心状态控制中心 ======
+
+
+    // ====== 🌟 1111 核心状态控制中心 ======
     let isGuestMode = false; 
 
-    // 页面加载启动流程
+  // 页面加载启动流程
     window.addEventListener('load', function() {
         const splash = document.getElementById('pwa-splash-screen');
         const body = document.body;
+
+        // 🌟 核心修复：必须调用智能分流函数，否则分流不生效！
+        switchToSmartScanPage();
 
         setTimeout(() => {
             if (splash) {
@@ -2423,18 +2424,17 @@
                 splash.style.opacity = '0';
                 body.classList.add('pwa-loaded');
                 
-                // 动画结束后 (800ms) 执行你的核心控制台
+                // 动画结束后 (800ms) 执行核心控制台
                 setTimeout(() => {
                     splash.remove();
-                    enforceLogin(); // 🌟 这里执行你加入的函数
+                    enforceLogin(); 
                 }, 800);
             } else {
                 enforceLogin();
             }
         }, 1500); // 绿圈转动时间
     });
-
-    // 🌟 核心状态控制中心 (彻底移除登录拦截与跳转)
+       // 🌟1122核心状态控制中心 (含苹果设备隔离)
     function enforceLogin() {
         const urlParams = new URLSearchParams(window.location.search);
         const nfcToken = urlParams.get('token') || urlParams.get('uid'); 
@@ -2442,15 +2442,61 @@
         // 刷新个人中心按钮状态
         if (typeof refreshAuthUI === 'function') refreshAuthUI();
 
-        // 只要有 token，就直接展示查验结果，没有任何阻拦
+        // 💡 如果网址带有查验参数
         if (nfcToken) {
-            setTimeout(() => {
-                autoShowNfcResult();
-            }, 500);
+            if (!isIOS) {
+                // 安卓设备：允许通过 uid/token 自动弹出结果页
+                setTimeout(() => {
+                    autoShowNfcResult();
+                }, 500);
+            } else {
+                //  苹果设备：拦截,不执行自动验证，需要用户自己去手动点
+                console.log("xxx3");
+                
+                // 为了防止用户下拉刷新时再出问题，顺手把网址里的 token 悄悄擦除掉
+                const cleanUrl = window.location.pathname;
+                window.history.replaceState(null, null, cleanUrl);
+            }
         }
     }
 
-// 🌟 自动展示查验结果的专属函数（只有确认登录后才会执行到这里！）
+    // 🌟 新增：自动跳转到 NFC 查验页的函数
+    function switchToDefaultB3() {
+        // 1. 模拟点击底部导航的“查验”按钮 (Page B)
+        const navBBtn = document.querySelector('.nav-item.nav-b');
+        if (navBBtn) nav('pageB', navBBtn);
+
+        // 2. 模拟点击顶部的“NFC验证”选项卡 (它是第3个 sub-nav-item)
+        const tabB3Btn = document.querySelectorAll('.sub-nav-item')[2];
+        if (tabB3Btn) tabB('B3', tabB3Btn);
+    }
+
+
+
+
+// 1133全局探测器：判断当前是不是苹果 iOS 设备
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent || navigator.vendor || window.opera) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+    // 1144 启动分流器：苹果进 B1(扫码)，安卓进 B3(NFC)
+    function switchToSmartScanPage() {
+        // 先切换到底部导航的“查验”大类 (Page B)
+        const navBBtn = document.querySelector('.nav-item.nav-b');
+        if (navBBtn) nav('pageB', navBBtn);
+
+        if (isIOS) {
+            // 苹果设备：不支持 NFC，强切到 B3
+            console.log(" ios/b3");
+            const tabB3Btn = document.querySelectorAll('.sub-nav-item')[2];
+            if (tabB3Btn) tabB('B3', tabB3Btn);
+        } else {
+            //  安卓设备：支持 NFC，默认切到 B3 (NFC感应页)
+            console.log(" and/b3");
+            const tabB3Btn = document.querySelectorAll('.sub-nav-item')[2];
+            if (tabB3Btn) tabB('B3', tabB3Btn);
+        }
+    }
+
+// 🌟自动展示查验结果的专属函数（只有确认登录后才会执行到这里！）
     function autoShowNfcResult() {
         const urlParams = new URLSearchParams(window.location.search);
         const tokenFromUrl = urlParams.get('token'); 
